@@ -1,1 +1,114 @@
 # nets1500-hw5-project
+
+# Smart Degree Planner
+
+_Automated Class Scheduling Based on Major Prerequisites_  
+**Penn Engineering | NETS 1500 | Spring 2025**
+
+**Team Members:**  
+- Ben Yoon (yoonb@seas.upenn.edu)  
+- Cherilynn Chow (ccheril@sas.upenn.edu)  
+- Sam Park (sampark@sas.upenn.edu)
+
+---
+
+## Project Overview
+
+Smart Degree Planner helps Penn students generate optimal, semester-by-semester course schedules for their major. The tool scrapes or loads course data, models prerequisites as a directed graph, and uses graph algorithms (like topological sort) to ensure all requirements are satisfied in a feasible order.
+
+---
+
+## Features
+
+- **Automated Course Scheduling:**  
+  Generate a valid course plan for your selected major that satisfies all prerequisite dependencies.
+- **Graph Modeling:**  
+  Courses and their prerequisites are represented as a directed graph.
+- **Custom User Preferences:**  
+  Input your major, choose electives/gen eds, set maximum courses per semester, and block semesters (e.g. for study abroad).
+- **Cycle Detection & Error Handling:**  
+  Detects prerequisite cycles and warns users about impossible course plans.
+- **Extensible:**  
+  Easily add more majors, advanced prerequisite logic, or visualizations.
+
+---
+
+## How It Works
+
+1. **Data Input:**  
+   Load or scrape course and prerequisite data (CSV/JSON format) into the program.
+2. **Graph Construction:**  
+   Build a directed graph with courses as nodes and prerequisites as edges.
+3. **Scheduling Algorithm:**  
+   Use topological sort to produce a valid course order. Additional logic for preferences, electives, and error checking.
+4. **User Interface:**  
+   Simple CLI to input your options and view your recommended schedule.
+
+---
+
+## Directory Structure
+
+```text
+root/
+├── src/
+│   ├── data/              # Data loaders and parsers
+│   ├── model/             # Course and prerequisite objects
+│   ├── scheduler/         # Graph, scheduling, and algorithms
+│   └── ui/                # Command-line interface
+├── data/                  # Input data files (CSV/JSON)
+└── README.md
+```
+
+<!-- TODO: -->
+
+<!-- ---
+
+## Getting Started
+
+1. **Clone the repository:**  
+   `git clone <nets1500-hw5-project>`
+
+2. **Add course data:**  
+   Place your CSV or JSON data files into the `data/` folder.
+
+3. **Compile and run:**  
+   - Compile all Java files in `src/`.
+   - Run `Main.java` or launch `DegreePlannerUI`.
+
+4. **Use the CLI:**  
+   Follow prompts to input your major and preferences, then view your recommended schedule. -->
+
+<!-- TODO: -->
+
+<!-- ---
+
+## Work Breakdown
+
+- **Ben Yoon:**  
+  Graph modeling, prerequisite logic, scheduling algorithms (topological sort, load balancing).
+- **Cherilynn Chow:**  
+  Web scraping & parsing, course data prep (CSV/JSON).
+- **Sam Park:**  
+  User interface (CLI), displaying schedules, documentation.
+
+---
+
+## Concepts Used
+
+- **Graph and Graph Algorithms** (prerequisite modeling, topological sort)
+- **Information Networks** (web scraping and data processing)
+
+---
+
+## Future Extensions
+
+- Support for multiple majors/minors
+- Visualization of prerequisite graphs
+- Advanced user preferences (semester blocking, elective planning, etc.)
+- Handling of ambiguous or complex prerequisites (AND/OR, corequisites)
+
+---
+
+## Contact
+
+Questions? Email a team member or open an issue on the repository. -->
