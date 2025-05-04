@@ -1,21 +1,32 @@
 package model;
 
-import java.util.*;
+import java.util.List;
 
 public class Course {
-    public String code;
-    public String name;
-    public List<String> prerequisites; // List of course codes (IDs)
-    public boolean isGenEd;
-    public boolean isElective;
+    private final String courseId; // e.g. CIS 1200
+    private final String name; // Might not need this
+    private final  List<List<String>> prerequisites; // List of a lists to include both OR and AND groups
 
-    public Course(String code, String name) {
-        this.code = code;
+    public Course(String courseId, String name,  List<List<String>> prerequisites) {
+        this.courseId = courseId;
         this.name = name;
-        this.prerequisites = new ArrayList<>();
-        this.isGenEd = false;
-        this.isElective = false;
+        this.prerequisites = prerequisites;
     }
 
-    // Add more attributes as needed (semester, credits, etc.)
+    public String getCourseId() {
+        return courseId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public  List<List<String>> getPrerequisites() {
+        return prerequisites;
+    }
+
+    @Override
+    public String toString() {
+        return courseId + ": " + name + " | Prereqs: " + prerequisites;
+    }
 }
