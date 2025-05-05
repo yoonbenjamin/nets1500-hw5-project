@@ -112,7 +112,7 @@ public class CourseDataLoader {
                     // Try to extract prerequisites from description
                     String prereqText = descPrereqThreeCoursesMatcher.group();
                     prerequisites = extractPrerequisites(prereqText);
-                    break;
+                    return prerequisites;
                 }
 
                 // Check if the description contains "Prerequisite" with two courses
@@ -124,7 +124,7 @@ public class CourseDataLoader {
                     // Try to extract prerequisites from description
                     String prereqText = descPrereqTwoCoursesMatcher.group();
                     prerequisites = extractPrerequisites(prereqText);
-                    break;
+                    return prerequisites;
                 }
 
                 // Check if the description contains "Prerequisite" with two courses and OR
@@ -137,18 +137,29 @@ public class CourseDataLoader {
                     // Try to extract prerequisites from description
                     String prereqText = descPrereqTwoCoursesORMatcher.group();
                     prerequisites = extractPrerequisites(prereqText);
-                    break;
+                    return prerequisites;
                 }
 
-                // Check if the description contains "Prerequisite" with one course
-                // Example: "Prerequisite: CIS 1200"
-                Pattern descPrereqOneCoursePattern = Pattern.compile("Prerequisite:(\\s+([A-Za-z]+\\s+)+)\\d\\d\\d\\d");
-                Matcher descPrereqOneCourseMatcher = descPrereqOneCoursePattern.matcher(descText);
-                if (descPrereqOneCourseMatcher.find()) {
+                // Check if the description contains "Prerequisite" with one course (four letter class code)
+                // Example: "Prerequisite: PHYS 1200"
+                Pattern descPrereqOneCourseFourPattern = Pattern.compile("Prerequisite: [A-Za-z][A-Za-z][A-Za-z][A-Za-z]\\s\\d\\d\\d\\d");
+                Matcher descPrereqOneCourseFourMatcher = descPrereqOneCourseFourPattern.matcher(descText);
+                if (descPrereqOneCourseFourMatcher.find()) {
                     // Try to extract prerequisites from description
-                    String prereqText = descPrereqOneCourseMatcher.group();
+                    String prereqText = descPrereqOneCourseFourMatcher.group();
                     prerequisites = extractPrerequisites(prereqText);
-                    break;
+                    return prerequisites;
+                }
+
+                // Check if the description contains "Prerequisite" with one course (three letter class code)
+                // Example: "Prerequisite: CIS 1200"
+                Pattern descPrereqOneCourseThreePattern = Pattern.compile("Prerequisite: [A-Za-z][A-Za-z][A-Za-z]\\s\\d\\d\\d\\d");
+                Matcher descPrereqOneCourseThreeMatcher = descPrereqOneCourseThreePattern.matcher(descText);
+                if (descPrereqOneCourseThreeMatcher.find()) {
+                    // Try to extract prerequisites from description
+                    String prereqText = descPrereqOneCourseThreeMatcher.group();
+                    prerequisites = extractPrerequisites(prereqText);
+                    return prerequisites;
                 }
             }
         }
