@@ -48,10 +48,10 @@ Smart Degree Planner helps Penn students generate optimal, semester-by-semester 
 
 ## Notes / Assumptions
 
-- Only considers major requirements since the electives are dependent on the student
-- Only works for BSE majors
-- Senior project courses are grouped into one section (Senior Design Project Courses)
-- In the case of major requirements where students can choose between multiple courses to fulfill a requirement, the first course is chosen since the chosce is dependent on the student
+- Only considers major requirements since the electives are dependent on the student.
+- Only works for BSE majors.
+- Senior project courses are grouped into one section (Senior Design Project Courses).
+- In the case of major requirements where students can choose between multiple courses to fulfill a requirement, the first course is chosen since the chosce is dependent on the student.
 - In courses where there is an OR in the prerequisites, the courses are contained in a list.
 - Due to the differences in major requirement set-ups in Penn's major websites, some major requirement courses where the student selects multiple from a set of courses may be outputted incorrectly (for example, for the DMD major, the major requirement of selecting two courses from CIS 4610, CIS 5610, CIS 4620, CIS 5620, CIS 4550, or CIS 5550). Thus, in these cases, the courses are not included. 
 
