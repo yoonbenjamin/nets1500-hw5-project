@@ -48,10 +48,10 @@ Smart Degree Planner helps Penn students generate optimal, semester-by-semester 
 
 ## Notes
 
-- Only considers major requirements since the electives are dependent on the student
-- Only works for BSE majors
-- Senior project courses are grouped into one section (Senior Design Project Courses)
-- In the case of major requirements where students can choose between multiple courses to fulfill a requirement, the first course is chosen since the chosce is dependent on the student
+- Only considers major requirements since the electives are dependent on the student.
+- Only works for BSE majors.
+- Senior project courses are grouped into one section (Senior Design Project Courses).
+- In the case of major requirements where students can choose between multiple courses to fulfill a requirement, the first course is chosen since the chosce is dependent on the student.
 - In courses where there is an OR in the prerequisites, the courses are contained in a list.
 
 ---
