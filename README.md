@@ -68,14 +68,11 @@ root/
 1. **Clone the repository:**  
    `git clone <nets1500-hw5-project>`
 
-2. **Add course data:**  
-   Place your CSV or JSON data files into the `data/` folder.
-
-3. **Compile and run:**  
+2. **Compile and run:**  
    - Compile all Java files in `src/`.
    - Run `Main.java` or launch `DegreePlannerUI`.
 
-4. **Use the CLI:**  
+3. **Use the CLI:**  
    Follow prompts to input your major and preferences, then view your recommended schedule. -->
 
 <!-- TODO: -->
@@ -87,7 +84,7 @@ root/
 - **Ben Yoon:**  
   Graph modeling, prerequisite logic, scheduling algorithms (topological sort, load balancing).
 - **Cherilynn Chow:**  
-  Web scraping & parsing, course data prep (CSV/JSON).
+  Web scraping & parsing, course data prep.
 - **Sam Park:**  
   User interface (CLI), displaying schedules, documentation.
 
@@ -106,6 +103,14 @@ root/
 - Visualization of prerequisite graphs
 - Advanced user preferences (semester blocking, elective planning, etc.)
 - Handling of ambiguous or complex prerequisites (AND/OR, corequisites)
+
+---
+
+## Notes
+
+- Only considers major requirements since the electives are dependent on the student
+- Senior project courses are grouped into one section (Senior Design Project Courses)
+- In the case of major requirements where students can choose between multiple courses to fulfill a requirement, the first course is chosen since the chosce is dependent on the student
 
 ---
 

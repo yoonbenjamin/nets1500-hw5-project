@@ -19,7 +19,7 @@ public class DegreePlannerUI {
 
         List<String> schedule = scheduler.generateSchedule();
         if (schedule.size() > 0) {
-            System.out.println("Recommended course order:");
+            System.out.println("Recommended course order (only includes major requirements and not electives):");
             for (String code : schedule) {
                 System.out.println(code);
             }
