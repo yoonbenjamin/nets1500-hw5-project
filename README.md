@@ -36,13 +36,23 @@ Smart Degree Planner helps Penn students generate optimal, semester-by-semester 
 ## How It Works
 
 1. **Data Input:**  
-   Load or scrape course and prerequisite data (CSV/JSON format) into the program.
+   Load or scrape course and prerequisite data from UPenn's course/program websites into the program.
 2. **Graph Construction:**  
    Build a directed graph with courses as nodes and prerequisites as edges.
 3. **Scheduling Algorithm:**  
    Use topological sort to produce a valid course order. Additional logic for preferences, electives, and error checking.
 4. **User Interface:**  
    Simple CLI to input your options and view your recommended schedule.
+
+---
+
+## Notes
+
+- Only considers major requirements since the electives are dependent on the student
+- Only works for BSE majors
+- Senior project courses are grouped into one section (Senior Design Project Courses)
+- In the case of major requirements where students can choose between multiple courses to fulfill a requirement, the first course is chosen since the chosce is dependent on the student
+- In courses where there is an OR in the prerequisites, the courses are contained in a list.
 
 ---
 
@@ -68,14 +78,11 @@ root/
 1. **Clone the repository:**  
    `git clone <nets1500-hw5-project>`
 
-2. **Add course data:**  
-   Place your CSV or JSON data files into the `data/` folder.
-
-3. **Compile and run:**  
+2. **Compile and run:**  
    - Compile all Java files in `src/`.
    - Run `Main.java` or launch `DegreePlannerUI`.
 
-4. **Use the CLI:**  
+3. **Use the CLI:**  
    Follow prompts to input your major and preferences, then view your recommended schedule. -->
 
 <!-- TODO: -->
@@ -87,7 +94,7 @@ root/
 - **Ben Yoon:**  
   Graph modeling, prerequisite logic, scheduling algorithms (topological sort, load balancing).
 - **Cherilynn Chow:**  
-  Web scraping & parsing, course data prep (CSV/JSON).
+  Web scraping & parsing, course data prep.
 - **Sam Park:**  
   User interface (CLI), displaying schedules, documentation.
 
