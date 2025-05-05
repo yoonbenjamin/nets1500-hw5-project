@@ -36,13 +36,23 @@ Smart Degree Planner helps Penn students generate optimal, semester-by-semester 
 ## How It Works
 
 1. **Data Input:**  
-   Load or scrape course and prerequisite data (CSV/JSON format) into the program.
+   Load or scrape course and prerequisite data from UPenn's course/program websites into the program.
 2. **Graph Construction:**  
    Build a directed graph with courses as nodes and prerequisites as edges.
 3. **Scheduling Algorithm:**  
    Use topological sort to produce a valid course order. Additional logic for preferences, electives, and error checking.
 4. **User Interface:**  
    Simple CLI to input your options and view your recommended schedule.
+
+---
+
+## Notes
+
+- Only considers major requirements since the electives are dependent on the student
+- Only works for BSE majors
+- Senior project courses are grouped into one section (Senior Design Project Courses)
+- In the case of major requirements where students can choose between multiple courses to fulfill a requirement, the first course is chosen since the chosce is dependent on the student
+- In courses where there is an OR in the prerequisites, the courses are contained in a list.
 
 ---
 
@@ -103,14 +113,6 @@ root/
 - Visualization of prerequisite graphs
 - Advanced user preferences (semester blocking, elective planning, etc.)
 - Handling of ambiguous or complex prerequisites (AND/OR, corequisites)
-
----
-
-## Notes
-
-- Only considers major requirements since the electives are dependent on the student
-- Senior project courses are grouped into one section (Senior Design Project Courses)
-- In the case of major requirements where students can choose between multiple courses to fulfill a requirement, the first course is chosen since the chosce is dependent on the student
 
 ---
 
