@@ -22,6 +22,20 @@ public class PrereqGraph {
                     adjList.get(prereqCourse).add(courseId); // prereq → course
                 }
             }
+
+            // EXTRA CODE FOR DETAILS THAT CAN"T BE CAPTURED DURING WEBSCRAPING DUE TO EXTERNAL BLOCKERS
+            // CIS 1100 is recommended to take before CIS 1200 but isn't a strict prereq
+            if (courseId.equals("CIS 1100")) {
+                adjList.get(courseId).add("CIS 1200");
+            }
+
+            // Add "Senior Design Project Courses" as a prerequisite for all courses so it ends up at the end
+            adjList.get(courseId).add("Senior Design Project Courses");
+
+            if (course.getName().contains("Senior")) {
+                adjList.remove(courseId);
+                courses.remove(courseId);
+            }
         }
     }
 
