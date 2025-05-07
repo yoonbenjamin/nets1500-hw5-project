@@ -31,7 +31,7 @@ public class DegreePlannerUI {
 
             try {
                 courses = CourseDataLoader.findCoursesAndPrereqsInMajor(majorCode);
-                System.out.println(courses);
+                // System.out.println(courses);
                 if (courses.isEmpty()) {
                     System.out.println("No courses found for major '" + majorCode +
                             "'. Please check the major code or type 'exit' to quit.");

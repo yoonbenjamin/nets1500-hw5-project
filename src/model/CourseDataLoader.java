@@ -61,33 +61,88 @@ public class CourseDataLoader {
         Elements majorTable = doc.select(".sc_courselist");
 
         Elements rows = majorTable.select("tr.odd,tr.even");
-        for (Element row : rows) {
+        for (Element row : rows) { // Each row is a tr
             Element creditColumn = row.select("td.hourscol").first();
             if (creditColumn != null) {
-                // Check if the credit column is not empty to ensure it's a course
-                // and not a header or empty row
                 if (creditColumn.text() != null && !creditColumn.text().isEmpty()) {
-                    Elements courses = row.select("td.codecol");
-                    if (courses != null) {
-                        for (Element course : courses) {
-                            Element courseLink = course.selectFirst("a");
-                            if (courseLink != null) {
-                                String courseLinkHref = courseLink.attr("href");
-                                String courseUrl = BASE_URL + courseLinkHref;
-                                List<List<String>> prerequisites = findPrerequisites(courseUrl);
 
-                                String courseId = courseLink.text();
-                                Element courseNameElement = courseLink.parent().nextElementSibling();
-                                String courseName = courseNameElement != null ? courseNameElement.text() : "";
-                                Course courseToAddOdd = new Course(courseId, courseName, prerequisites);
-                                courseList.add(courseToAddOdd);
+                    // Attempt to get the primary course name for this row first
+                    String primaryCourseNameForRow = "";
+                    Element titleColElement = row.select("td.titlecol").first();
+                    if (titleColElement != null) {
+                        primaryCourseNameForRow = titleColElement.text().trim();
+                    } else {
+                        // Fallback If no titlecol try to find the cell next to the first codecol
+                        Element firstCodeCellInRow = row.select("td.codecol").first();
+                        if (firstCodeCellInRow != null) {
+                            Element potentialNameCell = firstCodeCellInRow.nextElementSibling();
+                            if (potentialNameCell != null &&
+                                    "td".equalsIgnoreCase(potentialNameCell.tagName()) &&
+                                    !potentialNameCell.hasClass("hourscol") &&
+                                    !potentialNameCell.text().trim().matches("^\\d*\\.?\\d+$")) { // Ensure it's a td
+                                primaryCourseNameForRow = potentialNameCell.text().trim();
+                            }
+                        }
+                    }
+
+                    Elements codeCells = row.select("td.codecol");
+                    if (codeCells != null) {
+                        for (Element codeCell : codeCells) {
+                            Elements courseLinksInCell = codeCell.select("a");
+
+                            for (Element courseLink : courseLinksInCell) {
+                                if (courseLink != null && courseLink.hasAttr("href")
+                                        && courseLink.attr("href").contains("/search/?P=")) {
+                                    String courseLinkHref = courseLink.attr("href");
+                                    String courseUrl = BASE_URL + courseLinkHref;
+
+                                    List<List<String>> prerequisites = findPrerequisites(courseUrl);
+
+                                    String courseId = courseLink.text().replace("\u00a0", " ").trim();
+                                    String courseName = primaryCourseNameForRow; // Start with the name found for the
+
+                                    // If the link has a specific title attribute AND its different from just the
+                                    String linkTitle = courseLink.hasAttr("title")
+                                            ? courseLink.attr("title").replace("&nbsp;", " ").trim()
+                                            : "";
+                                    if (!linkTitle.isEmpty() && !linkTitle.equalsIgnoreCase(courseId)
+                                            && !linkTitle.equalsIgnoreCase(primaryCourseNameForRow)) {
+                                        // Only override if linkTitle offers a more descriptive name than the courseId
+                                        if (primaryCourseNameForRow.isEmpty()
+                                                || primaryCourseNameForRow.equalsIgnoreCase(courseId)
+                                                || courseLinksInCell.size() > 1) {
+                                            courseName = linkTitle;
+                                        }
+                                    }
+
+                                    // If after all attempts courseName is empty or same as ID
+                                    if ((courseName.isEmpty() || courseName.equalsIgnoreCase(courseId))
+                                            && !primaryCourseNameForRow.isEmpty()) {
+                                        courseName = primaryCourseNameForRow;
+                                    }
+
+                                    // Final fallback if name is still just the courseID or empty
+                                    if (courseName.isEmpty() || courseName.equalsIgnoreCase(courseId)) {
+                                        courseName = "Course name not found"; // Or keep as courseId if preferred
+                                    }
+
+                                    // Filter out Senior Design courses by name before adding
+                                    if (courseName.toLowerCase().contains("senior")) {
+                                        // System.out.println("Skipping Senior Design related course: " + courseId + " -
+                                        // "
+                                        // + courseName);
+                                        continue;
+                                    }
+
+                                    Course courseToAdd = new Course(courseId, courseName, prerequisites);
+                                    courseList.add(courseToAdd);
+                                }
                             }
                         }
                     }
                 }
             }
         }
-
         return courseList;
     }
 
@@ -286,9 +341,9 @@ public class CourseDataLoader {
 
         try {
             List<Course> courses = findCoursesAndPrereqsInMajor(inputtedCourse);
-            for (Course course : courses) {
-                System.out.println(course);
-            }
+            // for (Course course : courses) {
+            // System.out.println(course);
+            // }
         } catch (IOException e) {
             System.err.println("Failed to load course data: " + e.getMessage());
         }

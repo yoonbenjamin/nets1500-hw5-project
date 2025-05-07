@@ -4,57 +4,103 @@ import model.Course;
 import java.util.*;
 
 public class PrereqGraph {
-    // Map of courseId to Course object for all valid schedulable courses
-    private final Map<String, Course> courses;
-    // Adjacency list key is courseId
-    private final Map<String, List<String>> adjList;
+    private final Map<String, Course> courses; // Map of courseId to Course object for ALL courses in the graph
+    private final Map<String, List<String>> adjList; // Adjacency list key is courseId value is list of its successors
 
     private static final String SENIOR_DESIGN_PLACEHOLDER = "Senior Design Project Courses";
 
-    public PrereqGraph(List<Course> courseList) {
+    public PrereqGraph(List<Course> courseListFromLoader) {
         courses = new HashMap<>();
         adjList = new HashMap<>();
+        Set<String> knownCourseIds = new HashSet<>(); // Tracks all course IDs we know about
 
-        // Initialize all potential nodes from courseList first
-        List<Course> schedulableCourses = new ArrayList<>();
-        for (Course course : courseList) {
-            if (course.getName().contains("Senior")) {
-                // Skip Senior named courses if they are to be replaced by the placeholder
-                continue;
-            }
-            schedulableCourses.add(course);
-            adjList.put(course.getCourseId(), new ArrayList<>()); // Ensure node exists
-            courses.put(course.getCourseId(), course);
+        // Initial population from the loaders list
+        for (Course course : courseListFromLoader) {
+            // The Senior filter is now expected to be done in CourseDataLoader
+            String courseId = course.getCourseId();
+            courses.put(courseId, course);
+            adjList.put(courseId, new ArrayList<>());
+            knownCourseIds.add(courseId);
         }
 
-        // Add the placeholder for Senior Design as a node
-        adjList.putIfAbsent(SENIOR_DESIGN_PLACEHOLDER, new ArrayList<>());
+        // Add the placeholder for Senior Design as a known course and node
         courses.putIfAbsent(SENIOR_DESIGN_PLACEHOLDER,
                 new Course(SENIOR_DESIGN_PLACEHOLDER, "Senior Design Placeholder", Collections.emptyList()));
+        adjList.putIfAbsent(SENIOR_DESIGN_PLACEHOLDER, new ArrayList<>());
+        knownCourseIds.add(SENIOR_DESIGN_PLACEHOLDER);
 
-        for (Course course : schedulableCourses) {
+        // Iteratively discover and add phantom prerequisite courses
+        Queue<String> processingQueue = new LinkedList<>(knownCourseIds);
+
+        // Create a temporary list of courses whose prerequisites need checking for
+        List<Course> coursesToCheckForPhantomPrereqs = new ArrayList<>(courseListFromLoader);
+        int currentCourseIndex = 0;
+
+        Set<String> processedForPhantomDiscovery = new HashSet<>(); // Avoid reprocessing a course for phantom discovery
+
+        // We need to iterate until no new phantom courses are added in a pass
+        boolean newPhantomAddedInPass;
+        do {
+            newPhantomAddedInPass = false;
+            // Iterate over a snapshot of current known actual courses to discover their
+            List<Course> currentCoursesSnapshot = new ArrayList<>(courses.values());
+
+            for (Course currentCourse : currentCoursesSnapshot) {
+                if (processedForPhantomDiscovery.contains(currentCourse.getCourseId())) {
+                }
+
+                for (List<String> prereqGroup : currentCourse.getPrerequisites()) {
+                    for (String prereqCourseId : prereqGroup) {
+                        if (!knownCourseIds.contains(prereqCourseId)) {
+                            // This is a missing prerequisite create a phantom for it
+                            // System.out.println("INFO: Auto-adding missing prerequisite: " +
+                            // prereqCourseId +
+                            // " (needed by " + currentCourse.getCourseId() + ")");
+                            Course phantomPrereq = new Course(prereqCourseId,
+                                    prereqCourseId + " (auto-added)", // Simple name
+                                    Collections.emptyList()); // Phantom courses have no further prereqs
+
+                            courses.put(prereqCourseId, phantomPrereq);
+                            adjList.put(prereqCourseId, new ArrayList<>());
+                            knownCourseIds.add(prereqCourseId);
+                            newPhantomAddedInPass = true;
+                        }
+                    }
+                }
+                processedForPhantomDiscovery.add(currentCourse.getCourseId());
+            }
+        } while (newPhantomAddedInPass); // Loop if new phantoms were added to check their prereqs
+
+        // Second pass Now that all nodes exist
+        for (Course course : courses.values()) { // Iterate over all courses including phantoms
             String courseId = course.getCourseId();
-
-            // Build graph from prerequisites
             for (List<String> prereqGroup : course.getPrerequisites()) {
                 for (String prereqCourseId : prereqGroup) {
-                    // Ensure prereqCourseId node exists in adjList if its a valid course
-                    adjList.putIfAbsent(prereqCourseId, new ArrayList<>());
-                    adjList.get(prereqCourseId).add(courseId);
+                    // adjList should contain prereqCourseId as a key from the phantom creation step
+                    if (adjList.containsKey(prereqCourseId)) {
+                        adjList.get(prereqCourseId).add(courseId);
+                    } else {
+                        // This should not happen if all prereqs were added as phantoms
+                        System.err.println("WARNING: Prerequisite " + prereqCourseId + " for " + courseId +
+                                " not found in adjList during edge creation. Skipping edge.");
+                    }
                 }
             }
+        }
 
-            // EXTRA CODE FOR DETAILS THAT CAN"T BE CAPTURED DURING WEBSCRAPING DUE TO
-            // EXTERNAL BLOCKERS
-            // Special rule CIS 1100 is a soft prereq for CIS 1200 enforce it
-            if (courseId.equals("CIS 1100")) {
-                adjList.get(courseId).add("CIS 1200");
-                // Ensure CIS 1200 is in adjList if not already processed
-                adjList.putIfAbsent("CIS 1200", new ArrayList<>());
+        // Apply special graph rules
+        if (knownCourseIds.contains("CIS 1100") && knownCourseIds.contains("CIS 1200")) {
+            adjList.get("CIS 1100").add("CIS 1200");
+        }
+
+        // All schedulable courses
+        for (String courseId : knownCourseIds) {
+            if (!courseId.equals(SENIOR_DESIGN_PLACEHOLDER)) {
+                // Ensure the courseId still exists as a key in adjList
+                if (adjList.containsKey(courseId)) {
+                    adjList.get(courseId).add(SENIOR_DESIGN_PLACEHOLDER);
+                }
             }
-
-            // All nonsenior schedulable courses lead to the Senior Design placeholder
-            adjList.get(courseId).add(SENIOR_DESIGN_PLACEHOLDER);
         }
     }
 
