@@ -58,10 +58,11 @@ This project primarily utilizes concepts from:
 
 ## Notes & Assumptions
 
-* The planner primarily focuses on listed major requirements for BSE degrees at Penn. Electives and general requirements are not explicitly scheduled.
-* Accuracy depends heavily on the structure and content of `catalog.upenn.edu`. Changes to the website may break the scraper.
-* Prerequisite parsing uses specific patterns; complex or non-standard prerequisite descriptions may not be fully captured.
-* Auto-added ("phantom") prerequisites (courses needed but not listed on the major page) are assumed to have no prerequisites themselves.
+* The planner primarily focuses on listed major requirements for BSE degrees at Penn. Electives are not explicitly scheduled.
+* Accuracy depends heavily on the structure and content of `catalog.upenn.edu`. Changes to the website may break the data scraping.
+* Prerequisite parsing uses specific text patterns. Complex or non-standard prerequisite descriptions may not be fully captured.
+* Auto-added ("phantom") prerequisites (courses needed for a major requirement but not listed on the major's specific curriculum page) are assumed to have no prerequisites themselves.
+* Some courses require a co-requisite lab section (e.g., CHEM 1011 requires CHEM 1101). If this co-requisite relationship is not explicitly stated in the parsable prerequisite text on the course catalog pages, the planner may not enforce taking them concurrently.
 * Specific courses (e.g., Writing Seminar, Senior Project I, Senior Project II) have forced placement rules applied.
 * In the case of major requirements where students can choose between multiple courses to fulfill a requirement, the first course is chosen since the chosce is dependent on the student.
 * In courses where there is an OR in the prerequisites, the courses are contained in a list.
