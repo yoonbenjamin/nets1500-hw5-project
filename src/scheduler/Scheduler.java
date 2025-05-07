@@ -37,7 +37,21 @@ public class Scheduler {
         try {
             // Use topological sort to influence processing order of eligibles
             List<String> initialProcessingOrder = graph.topoSort();
-
+            // TEMPORARY DEBUG
+            System.out.println("DEBUG: Initial allCoursesMap keys: " + allCoursesMap.keySet());
+            Course meam1100 = allCoursesMap.get("MEAM 1100");
+            if (meam1100 != null) {
+                System.out.println("DEBUG: MEAM 1100 Prereqs from DataLoader: " + meam1100.getPrerequisites());
+            } else {
+                System.out.println("DEBUG: MEAM 1100 not found in allCoursesMap!");
+            }
+            Course phys0151 = allCoursesMap.get("PHYS 0151");
+            if (phys0151 != null) {
+                System.out.println("DEBUG: PHYS 0151 Prereqs from DataLoader: " + phys0151.getPrerequisites());
+            } else {
+                System.out.println("DEBUG: PHYS 0151 not found in allCoursesMap!");
+            }
+            // END TEMPORARY DEBUG
             while (!coursesToSchedule.isEmpty()) {
                 List<String> currentSemesterCourses = new ArrayList<>();
                 List<String> eligibleNow = new ArrayList<>();
