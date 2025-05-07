@@ -2,121 +2,67 @@
 
 # Smart Degree Planner
 
-_Automated Class Scheduling Based on Major Prerequisites_  
 **Penn Engineering | NETS 1500 | Spring 2025**
 
-**Team Members:**  
-- Ben Yoon (yoonb@seas.upenn.edu)  
-- Cherilynn Chow (ccheril@sas.upenn.edu)  
-- Sam Park (sampark@sas.upenn.edu)
+**Team Members:**
+* Cherilynn Chow (ccheril@sas.upenn.edu)
+* Sam Park (sampark@sas.upenn.edu)
+* Ben Yoon (yoonb@seas.upenn.edu)
 
 ---
 
-## Project Overview
+## Project Description
 
-Smart Degree Planner helps Penn students generate optimal, semester-by-semester course schedules for their major. The tool scrapes or loads course data, models prerequisites as a directed graph, and uses graph algorithms (like topological sort) to ensure all requirements are satisfied in a feasible order.
-
----
-
-## Features
-
-- **Automated Course Scheduling:**  
-  Generate a valid course plan for your selected major that satisfies all prerequisite dependencies.
-- **Graph Modeling:**  
-  Courses and their prerequisites are represented as a directed graph.
-- **Custom User Preferences:**  
-  Input your major, choose electives/gen eds, set maximum courses per semester, and block semesters (e.g. for study abroad).
-- **Cycle Detection & Error Handling:**  
-  Detects prerequisite cycles and warns users about impossible course plans.
-- **Extensible:**  
-  Easily add more majors, advanced prerequisite logic, or visualizations.
-
----
-
-## How It Works# 
-
-1. **Data Input:**  
-   Load or scrape course and prerequisite data from UPenn's course/program websites into the program.
-2. **Graph Construction:**  
-   Build a directed graph with courses as nodes and prerequisites as edges.
-3. **Scheduling Algorithm:**  
-   Use topological sort to produce a valid course order. Additional logic for preferences, electives, and error checking.
-4. **User Interface:**  
-   Simple CLI to input your options and view your recommended schedule.
-
----
-
-## Notes / Assumptions
-
-- Only considers major requirements since the electives are dependent on the student.
-- Only works for BSE majors.
-- Senior project courses are grouped into one section (Senior Design Project Courses).
-- In the case of major requirements where students can choose between multiple courses to fulfill a requirement, the first course is chosen since the chosce is dependent on the student.
-- In courses where there is an OR in the prerequisites, the courses are contained in a list.
-- Due to the differences in major requirement set-ups in Penn's major websites, some major requirement courses where the student selects multiple from a set of courses may be outputted incorrectly (for example, for the DMD major, the major requirement of selecting two courses from CIS 4610, CIS 5610, CIS 4620, CIS 5620, CIS 4550, or CIS 5550). Thus, in these cases, the courses are not included.
-
----
-
-## Directory Structure
-
-```text
-root/
-├── src/
-│   ├── data/              # Data loaders and parsers
-│   ├── model/             # Course and prerequisite objects
-│   ├── scheduler/         # Graph, scheduling, and algorithms
-│   └── ui/                # Command-line interface
-├── data/                  # Input data files (CSV/JSON)
-└── README.md
-```
-
-<!-- TODO: -->
-
-<!-- ---
-
-## Getting Started
-
-1. **Clone the repository:**  
-   `git clone <nets1500-hw5-project>`
-
-2. **Compile and run:**  
-   - Compile all Java files in `src/`.
-   - Run `Main.java` or launch `DegreePlannerUI`.
-
-3. **Use the CLI:**  
-   Follow prompts to input your major and preferences, then view your recommended schedule. -->
-
-<!-- TODO: -->
-
-<!-- ---
-
-## Work Breakdown
-
-- **Ben Yoon:**  
-  Graph modeling, prerequisite logic, scheduling algorithms (topological sort, load balancing).
-- **Cherilynn Chow:**  
-  Web scraping & parsing, course data prep.
-- **Sam Park:**  
-  User interface (CLI), displaying schedules, documentation.
+Smart Degree Planner is a Java application designed to assist Penn Engineering (BSE) students in planning their academic paths. The tool automatically generates a potential semester-by-semester course schedule based on the user's chosen major. It achieves this by scraping course and prerequisite data directly from the official Penn course catalog website. This data is used to build a dependency graph, and scheduling algorithms are applied to create a valid sequence that respects prerequisite constraints and basic placement rules, aiming for a balanced course load per semester as specified by the user.
 
 ---
 
 ## Concepts Used
 
-- **Graph and Graph Algorithms** (prerequisite modeling, topological sort)
-- **Information Networks** (web scraping and data processing)
+This project primarily utilizes concepts from:
+
+1.  **Graph and Graph Algorithms:** Course prerequisites are modeled as a directed graph where an edge `A -> B` means course A must be taken before course B. Topological sorting and custom scheduling logic based on graph traversal are used to determine a valid course sequence and distribute courses across semesters. Cycle detection is included within the topological sort algorithm.
+2.  **Information Networks (World Wide Web):** The application scrapes data (course IDs, names, prerequisites) from the live Penn course catalog website (`catalog.upenn.edu`) using the Jsoup library for HTML parsing. This involves navigating web pages and extracting structured information from the HTML source.
 
 ---
 
-## Future Extensions
+## Work Breakdown
 
-- Support for multiple majors/minors
-- Visualization of prerequisite graphs
-- Advanced user preferences (semester blocking, elective planning, etc.)
-- Handling of ambiguous or complex prerequisites (AND/OR, corequisites)
+* **Cherilynn Chow:** Developed the web scraping component (`CourseDataLoader.java`) using Jsoup to fetch course information and prerequisites from the Penn course catalog for various BSE majors. Implemented regex-based parsing to extract prerequisite details from course description text and structure it for the Course model. Handled data cleaning and de-duplication of loaded courses.
+* **Sam Park:** Implemented the command-line user interface (`DegreePlannerUI.java`, `Main.java`) to handle user input (major code, max courses per semester) and display the generated schedule output using `DegreePlan.java`. Added input validation and user-friendly error messages. Responsible for overall testing coordination and final documentation (User Manual, Report contributions).
+* **Ben Yoon:** Designed and implemented the graph model (`PrereqGraph.java`) to represent course dependencies. Developed and implemented the core scheduling algorithm including prerequisite logic, topological sort integration, load balancing based on max courses per semester, and logic for special course placements. Added phantom course creation for missing prerequisites.
 
 ---
 
-## Contact
+## Getting Started
 
-Questions? Email a team member or open an issue on the repository. -->
+**Prerequisites:**
+* Java Development Kit (JDK) 11 or higher installed.
+* `jsoup-1.16.1.jar` library file (place in a `lib` directory relative to the project root).
+
+**Compilation (from project root directory):**
+* Create an output directory: `mkdir bin`
+* Compile (use `;` instead of `:` for classpath on Windows):
+    ```bash
+    javac -d bin -cp lib/jsoup-1.16.1.jar src/model/*.java src/scheduler/*.java src/ui/*.java src/Main.java
+    ```
+
+**Running (from project root directory):**
+* Run (use `;` instead of `:` for classpath on Windows):
+    ```bash
+    java -cp bin:lib/jsoup-1.16.1.jar Main
+    ```
+* Follow the prompts to enter the desired BSE major code and the maximum number of courses per semester.
+
+---
+
+## Notes & Assumptions
+
+* The planner primarily focuses on listed major requirements for BSE degrees at Penn. Electives and general requirements are not explicitly scheduled.
+* Accuracy depends heavily on the structure and content of `catalog.upenn.edu`. Changes to the website may break the scraper.
+* Prerequisite parsing uses specific patterns; complex or non-standard prerequisite descriptions may not be fully captured.
+* Auto-added ("phantom") prerequisites (courses needed but not listed on the major page) are assumed to have no prerequisites themselves.
+* Specific courses (e.g., Writing Seminar, Senior Project I, Senior Project II) have forced placement rules applied.
+* In the case of major requirements where students can choose between multiple courses to fulfill a requirement, the first course is chosen since the chosce is dependent on the student.
+* In courses where there is an OR in the prerequisites, the courses are contained in a list.
+* Due to the differences in major requirement set-ups in Penn's major websites, some major requirement courses where the student selects multiple from a set of courses may be outputted incorrectly (for example, for the DMD major, the major requirement of selecting two courses from CIS 4610, CIS 5610, CIS 4620, CIS 5620, CIS 4550, or CIS 5550). Thus, in these cases, the courses are not included.
