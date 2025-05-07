@@ -67,4 +67,15 @@ public class PrereqGraph {
         visited.add(node);
         sorted.add(0, node); // prepend to maintain topo order
     }
+
+    public List<String> getPrereqs(String courseId) {
+        List<String> prereqs = new ArrayList<>();
+        for (Map.Entry<String, List<String>> entry : adjList.entrySet()) {
+            if (entry.getValue().contains(courseId)) {
+                prereqs.add(entry.getKey());
+            }
+        }
+        return prereqs;
+    }
+
 }
