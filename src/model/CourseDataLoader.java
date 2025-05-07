@@ -158,8 +158,7 @@ public class CourseDataLoader {
             for (Element descElement : descElements) {
                 String descText = descElement.text();
 
-                // Check if the description contains "Prerequisite" with three courses
-                // Example: "Prerequisite: CIS 1200 AND CIS 1210 AND CIS 1220"
+                // Check if the description contains Prerequisite with three courses
                 Pattern descPrereqThreeCoursesPattern = Pattern.compile(
                         "Prerequisite:(\\s+([A-Za-z]+\\s+)+)[0-9]+\\sAND\\s[A-Za-z0-9]+\\s[0-9]+\\s[A-Za-z0-9]+\\s[A-Za-z0-9]+\\s[0-9]+");
                 Matcher descPrereqThreeCoursesMatcher = descPrereqThreeCoursesPattern.matcher(descText);
@@ -170,8 +169,7 @@ public class CourseDataLoader {
                     return prerequisites;
                 }
 
-                // Check if the description contains "Prerequisite" with two courses
-                // Example: "Prerequisite: CIS 1200 AND CIS 1210"
+                // Check if the description contains Prerequisite with two courses
                 Pattern descPrereqTwoCoursesPattern = Pattern
                         .compile("Prerequisite:(\\s+([A-Za-z]+\\s+)+)[0-9]+\\sAND\\s[A-Za-z0-9]+\\s[0-9]+");
                 Matcher descPrereqTwoCoursesMatcher = descPrereqTwoCoursesPattern.matcher(descText);
@@ -182,9 +180,7 @@ public class CourseDataLoader {
                     return prerequisites;
                 }
 
-                // Check if the description contains "Prerequisite" with two courses and OR
-                // logic
-                // Example: "Prerequisite: CIS 1200 OR CIS 1210"
+                // Check if the description contains Prerequisite
                 Pattern descPrereqTwoCoursesORPattern = Pattern
                         .compile("Prerequisite:(\\s+([A-Za-z]+\\s+)+)[0-9]+\\sOR\\s[A-Za-z0-9]+\\s[0-9]+");
                 Matcher descPrereqTwoCoursesORMatcher = descPrereqTwoCoursesORPattern.matcher(descText);
@@ -195,9 +191,7 @@ public class CourseDataLoader {
                     return prerequisites;
                 }
 
-                // Check if the description contains "Prerequisite" with one course (four letter
-                // class code)
-                // Example: "Prerequisite: PHYS 1200"
+                // Check if the description contains Prerequisite with one course
                 Pattern descPrereqOneCourseFourPattern = Pattern
                         .compile("Prerequisite: [A-Za-z][A-Za-z][A-Za-z][A-Za-z]\\s\\d\\d\\d\\d");
                 Matcher descPrereqOneCourseFourMatcher = descPrereqOneCourseFourPattern.matcher(descText);
@@ -208,9 +202,7 @@ public class CourseDataLoader {
                     return prerequisites;
                 }
 
-                // Check if the description contains "Prerequisite" with one course (three
-                // letter class code)
-                // Example: "Prerequisite: CIS 1200"
+                // Check if the description contains Prerequisite with one course
                 Pattern descPrereqOneCourseThreePattern = Pattern
                         .compile("Prerequisite: [A-Za-z][A-Za-z][A-Za-z]\\s\\d\\d\\d\\d");
                 Matcher descPrereqOneCourseThreeMatcher = descPrereqOneCourseThreePattern.matcher(descText);
@@ -226,8 +218,7 @@ public class CourseDataLoader {
         return prerequisites;
     }
 
-    // Finds the prerequisites for all courses in a given department (UNUSED - might
-    // not need this)
+    // Finds the prerequisites for all courses in a given department
     public static List<Course> loadCoursesForDepartment(String departmentCode) throws IOException {
         String url = BASE_URL + "/courses/" + departmentCode.toLowerCase() + "/";
         Document doc = Jsoup.connect(url).get();
@@ -244,8 +235,7 @@ public class CourseDataLoader {
             for (Element descElement : descElements) {
                 String descText = descElement.text();
 
-                // Check if the description contains "Prerequisite" with three courses
-                // Example: "Prerequisite: CIS 1200 AND CIS 1210 AND CIS 1220"
+                // Check if the description contains Prerequisite with three courses
                 Pattern descPrereqThreeCoursesPattern = Pattern.compile(
                         "Prerequisite:(\\s+([A-Za-z]+\\s+)+)[0-9]+\\sAND\\s[A-Za-z0-9]+\\s[0-9]+\\s[A-Za-z0-9]+\\s[A-Za-z0-9]+\\s[0-9]+");
                 Matcher descPrereqThreeCoursesMatcher = descPrereqThreeCoursesPattern.matcher(descText);
@@ -256,8 +246,7 @@ public class CourseDataLoader {
                     break;
                 }
 
-                // Check if the description contains "Prerequisite" with two courses
-                // Example: "Prerequisite: CIS 1200 AND CIS 1210"
+                // Check if the description contains Prerequisite with two courses
                 Pattern descPrereqTwoCoursesPattern = Pattern
                         .compile("Prerequisite:(\\s+([A-Za-z]+\\s+)+)[0-9]+\\sAND\\s[A-Za-z0-9]+\\s[0-9]+");
                 Matcher descPrereqTwoCoursesMatcher = descPrereqTwoCoursesPattern.matcher(descText);
@@ -268,9 +257,7 @@ public class CourseDataLoader {
                     break;
                 }
 
-                // Check if the description contains "Prerequisite" with two courses and OR
-                // logic
-                // Example: "Prerequisite: CIS 1200 OR CIS 1210"
+                // Check if the description contains Prerequisite
                 Pattern descPrereqTwoCoursesORPattern = Pattern
                         .compile("Prerequisite:(\\s+([A-Za-z]+\\s+)+)[0-9]+\\sOR\\s[A-Za-z0-9]+\\s[0-9]+");
                 Matcher descPrereqTwoCoursesORMatcher = descPrereqTwoCoursesORPattern.matcher(descText);
@@ -281,8 +268,7 @@ public class CourseDataLoader {
                     break;
                 }
 
-                // Check if the description contains "Prerequisite" with one course
-                // Example: "Prerequisite: CIS 1200"
+                // Check if the description contains Prerequisite
                 Pattern descPrereqOneCoursePattern = Pattern.compile("Prerequisite:(\\s+([A-Za-z]+\\s+)+)\\d\\d\\d\\d");
                 Matcher descPrereqOneCourseMatcher = descPrereqOneCoursePattern.matcher(descText);
                 if (descPrereqOneCourseMatcher.find()) {
@@ -337,16 +323,16 @@ public class CourseDataLoader {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Enter BSE major (ex. CSCI, BE, etc.):");
 
-        String inputtedCourse = scanner.nextLine();
+        // String inputtedCourse = scanner.nextLine();
 
-        try {
-            List<Course> courses = findCoursesAndPrereqsInMajor(inputtedCourse);
-            // for (Course course : courses) {
-            // System.out.println(course);
-            // }
-        } catch (IOException e) {
-            System.err.println("Failed to load course data: " + e.getMessage());
-        }
+        // try {
+        // // List<Course> courses = findCoursesAndPrereqsInMajor(inputtedCourse);
+        // // for (Course course : courses) {
+        // // System.out.println(course);
+        // // }
+        // } catch (IOException e) {
+        // System.err.println("Failed to load course data: " + e.getMessage());
+        // }
 
         scanner.close();
     }

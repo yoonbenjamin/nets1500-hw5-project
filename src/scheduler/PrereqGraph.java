@@ -38,20 +38,20 @@ public class PrereqGraph {
 
         // Add the node for Writing Seminar
         courses.putIfAbsent(WRITING_SEMINAR,
-                new Course(WRITING_SEMINAR, WRITING_SEMINAR, Collections.emptyList())); // No prereqs for itself
+                new Course(WRITING_SEMINAR, WRITING_SEMINAR, Collections.emptyList()));
         adjList.putIfAbsent(WRITING_SEMINAR, new ArrayList<>());
         knownCourseIds.add(WRITING_SEMINAR);
 
-        // Iteratively discover and add phantom prerequisite courses
-        Queue<String> processingQueue = new LinkedList<>(knownCourseIds);
+        // // Iteratively discover and add phantom prerequisite courses
+        // Queue<String> processingQueue = new LinkedList<>(knownCourseIds);
 
-        // Create a temporary list of courses whose prerequisites need checking for
-        List<Course> coursesToCheckForPhantomPrereqs = new ArrayList<>(courseListFromLoader);
-        int currentCourseIndex = 0;
+        // // Create a temporary list of courses whose prerequisites need checking for
+        // List<Course> coursesToCheckForPhantomPrereqs = new
+        // ArrayList<>(courseListFromLoader);
+        // int currentCourseIndex = 0;
 
         Set<String> processedForPhantomDiscovery = new HashSet<>(); // Avoid reprocessing a course for phantom discovery
 
-        // We need to iterate until no new phantom courses are added in a pass
         boolean newPhantomAddedInPass;
         do {
             newPhantomAddedInPass = false;
@@ -70,8 +70,8 @@ public class PrereqGraph {
                             // prereqCourseId +
                             // " (needed by " + currentCourse.getCourseId() + ")");
                             Course phantomPrereq = new Course(prereqCourseId,
-                                    prereqCourseId + " (auto-added)", // Simple name
-                                    Collections.emptyList()); // Phantom courses have no further prereqs
+                                    prereqCourseId + " (auto-added)",
+                                    Collections.emptyList());
 
                             courses.put(prereqCourseId, phantomPrereq);
                             adjList.put(prereqCourseId, new ArrayList<>());
@@ -85,7 +85,7 @@ public class PrereqGraph {
         } while (newPhantomAddedInPass); // Loop if new phantoms were added to check their prereqs
 
         // Second pass Now that all nodes exist
-        for (Course course : courses.values()) { // Iterate over all courses including phantoms
+        for (Course course : courses.values()) {
             String courseId = course.getCourseId();
             for (List<String> prereqGroup : course.getPrerequisites()) {
                 for (String prereqCourseId : prereqGroup) {
@@ -93,7 +93,6 @@ public class PrereqGraph {
                     if (adjList.containsKey(prereqCourseId)) {
                         adjList.get(prereqCourseId).add(courseId);
                     } else {
-                        // This should not happen if all prereqs were added as phantoms
                         System.err.println("WARNING: Prerequisite " + prereqCourseId + " for " + courseId +
                                 " not found in adjList during edge creation. Skipping edge.");
                     }
@@ -109,14 +108,13 @@ public class PrereqGraph {
         // Link regular courses to Senior Project I and Project I to Project II
         for (String courseId : knownCourseIds) {
             if (!courseId.equals(SENIOR_PROJECT_1) && !courseId.equals(SENIOR_PROJECT_2)) {
-                // Ensure the courseId still exists as a key in adjList
                 if (adjList.containsKey(courseId)) {
                     adjList.get(courseId).add(SENIOR_PROJECT_1); // All other courses are prereqs for Project I
                 }
             }
         }
         // Add explicit dependency
-        if (adjList.containsKey(SENIOR_PROJECT_1)) { // Ensure node exists
+        if (adjList.containsKey(SENIOR_PROJECT_1)) {
             adjList.get(SENIOR_PROJECT_1).add(SENIOR_PROJECT_2);
         }
     }
@@ -143,8 +141,7 @@ public class PrereqGraph {
     private void dfs(String courseId, Set<String> visited, Set<String> fullyProcessed, List<String> sortedOrder)
             throws IllegalStateException {
         if (!adjList.containsKey(courseId) && !courses.containsKey(courseId)) {
-            // This courseId might be a prerequisite listed in a courses data
-            visited.remove(courseId); // Ensure its not stuck in visited if it was added then removed
+            visited.remove(courseId);
             fullyProcessed.add(courseId);
             return;
         }

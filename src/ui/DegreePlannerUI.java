@@ -40,7 +40,6 @@ public class DegreePlannerUI {
                 System.err.println(
                         "An error occurred while loading course data for major '" + majorCode + "': " + e.getMessage());
                 System.out.println("Please check your internet connection and the major code, or type 'exit' to quit.");
-                // courses will remain null or empty loop will continue
             }
         }
 

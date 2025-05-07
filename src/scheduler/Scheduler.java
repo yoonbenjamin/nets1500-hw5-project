@@ -3,7 +3,7 @@ package scheduler;
 import model.Course;
 import model.DegreePlan;
 import java.util.*;
-import java.util.stream.Collectors;
+// import java.util.stream.Collectors;
 
 public class Scheduler {
     private final PrereqGraph graph;
@@ -74,7 +74,7 @@ public class Scheduler {
         }
 
         // Fill rest of Semester 1
-        List<String> eligibleForSem1All = findEligibleCourses(coursesToSchedule, completedCourses); // Find all
+        List<String> eligibleForSem1All = findEligibleCourses(coursesToSchedule, completedCourses);
 
         // If CIS 1100 was placed in Sem 1
         List<String> eligibleForSem1 = new ArrayList<>();
@@ -88,16 +88,14 @@ public class Scheduler {
         }
 
         int sem1FillCount = maxCoursesPerSemester - semester1Courses.size();
-        // Now use the filtered eligibleForSem1 list to fill the semester
         for (int i = 0; i < sem1FillCount && i < eligibleForSem1.size(); i++) {
             String courseToAdd = eligibleForSem1.get(i);
             semester1Courses.add(courseToAdd);
             coursesToSchedule.remove(courseToAdd);
-            completedCourses.add(courseToAdd); // Add nonforced courses to completed AFTER adding to semester
+            completedCourses.add(courseToAdd);
         }
         if (!semester1Courses.isEmpty()) {
-            // Ensure completedCourses reflects everything actually put in semester 1 before
-            completedCourses.addAll(semester1Courses); // Make sure all forced filled are completed
+            completedCourses.addAll(semester1Courses);
             plan.addSemester(semester1Courses);
         }
 
@@ -109,10 +107,8 @@ public class Scheduler {
                 if (semester2Courses.size() < maxCoursesPerSemester) { // Check space
                     semester2Courses.add(CIS_1200);
                     coursesToSchedule.remove(CIS_1200);
-                    // Dont add to completedCourses yet wait until end of semester 2 build
                 } else {
                     System.err.println("Warning: Not enough space in Semester 2 to force placement of " + CIS_1200);
-                    // CIS 1200 will be scheduled later by the main loop if space is an issue
                 }
             } else if (cis1200 != null) {
                 System.err.println("Warning: Cannot force " + CIS_1200 + " into Semester 2, prerequisites not met.");
@@ -122,11 +118,11 @@ public class Scheduler {
         // Fill rest of Semester 2
         List<String> eligibleForSem2 = findEligibleCourses(coursesToSchedule, completedCourses);
         int sem2FillCount = maxCoursesPerSemester - semester2Courses.size();
-        List<String> addedToSem2 = new ArrayList<>(); // Track whats actually added
+        List<String> addedToSem2 = new ArrayList<>();
         for (int i = 0; i < sem2FillCount && i < eligibleForSem2.size(); i++) {
             String courseToAdd = eligibleForSem2.get(i);
             semester2Courses.add(courseToAdd);
-            addedToSem2.add(courseToAdd); // Track for removal later
+            addedToSem2.add(courseToAdd);
         }
         // Update completedCourses and coursesToSchedule after filling semester 2
         coursesToSchedule.removeAll(addedToSem2);
@@ -145,7 +141,7 @@ public class Scheduler {
 
                 eligibleNow.sort(Comparator.comparingInt(courseId -> {
                     int index = initialProcessingOrder.indexOf(courseId);
-                    return index == -1 ? Integer.MAX_VALUE : index; // Put courses not in topo sort last
+                    return index == -1 ? Integer.MAX_VALUE : index;
                 }));
 
                 if (eligibleNow.isEmpty() && !coursesToSchedule.isEmpty()) {
@@ -190,12 +186,12 @@ public class Scheduler {
         // Force placement of Senior Projects
         List<List<String>> semesters = plan.getSemesters();
 
-        int sp1_final_index = -1; // Track where SP1 actually lands
+        int sp1_final_index = -1;
 
         // Place Senior Project I
         if (allCoursesMap.containsKey(SENIOR_PROJECT_1) && !completedCourses.contains(SENIOR_PROJECT_1)) {
             boolean sp1_placed = false;
-            int currentNumSemesters = semesters.size(); // Get current count
+            int currentNumSemesters = semesters.size();
 
             // Ensure we have semesters to work with add if plan is empty
             if (currentNumSemesters == 0) {
@@ -216,7 +212,7 @@ public class Scheduler {
             }
             // If not placed yet try the last semester
             if (!sp1_placed) {
-                int targetIndex = currentNumSemesters - 1; // Use current count
+                int targetIndex = currentNumSemesters - 1;
                 List<String> targetSem = semesters.get(targetIndex);
                 if (targetSem.size() < maxCoursesPerSemester) {
                     targetSem.add(SENIOR_PROJECT_1);
@@ -254,7 +250,7 @@ public class Scheduler {
                         + SENIOR_PROJECT_1 + " was not placed successfully.");
             } else {
                 boolean sp2_placed = false;
-                int currentNumSemesters = semesters.size(); // Reget count after potential SP1 placement
+                int currentNumSemesters = semesters.size();
                 int targetIndexForSP2 = sp1_final_index + 1; // Target semester AFTER SP1
 
                 if (targetIndexForSP2 < currentNumSemesters) {
@@ -293,7 +289,7 @@ public class Scheduler {
     // Helper method to check if logical prerequisites for a course are met
     private boolean arePrerequisitesMet(Course course, Set<String> completedCourses) {
         if (course == null)
-            return false; // Should not happen if courseId came from allCoursesMap
+            return false;
 
         List<List<String>> prereqGroups = course.getPrerequisites();
         if (prereqGroups.isEmpty()) {
@@ -302,8 +298,7 @@ public class Scheduler {
 
         for (List<String> orGroup : prereqGroups) { // Each inner list is an OR group
             if (orGroup.isEmpty()) { // An empty OR group within AND groups means this path is unsatisfiable
-                // This case should ideally be prevented by data validation
-                continue; // Or treat as true if it means optional category satisfied
+                continue;
             }
             boolean orGroupSatisfied = false;
             for (String prereqCourseId : orGroup) {
