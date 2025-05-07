@@ -7,7 +7,9 @@ public class PrereqGraph {
     private final Map<String, Course> courses; // Map of courseId to Course object for ALL courses in the graph
     private final Map<String, List<String>> adjList; // Adjacency list key is courseId value is list of its successors
 
-    private static final String SENIOR_DESIGN_PLACEHOLDER = "Senior Design Project Courses";
+    private static final String SENIOR_PROJECT_1 = "Senior Project I";
+    private static final String SENIOR_PROJECT_2 = "Senior Project II";
+    private static final String WRITING_SEMINAR = "Writing Seminar";
 
     public PrereqGraph(List<Course> courseListFromLoader) {
         courses = new HashMap<>();
@@ -23,11 +25,22 @@ public class PrereqGraph {
             knownCourseIds.add(courseId);
         }
 
-        // Add the placeholder for Senior Design as a known course and node
-        courses.putIfAbsent(SENIOR_DESIGN_PLACEHOLDER,
-                new Course(SENIOR_DESIGN_PLACEHOLDER, "Senior Design Placeholder", Collections.emptyList()));
-        adjList.putIfAbsent(SENIOR_DESIGN_PLACEHOLDER, new ArrayList<>());
-        knownCourseIds.add(SENIOR_DESIGN_PLACEHOLDER);
+        // Add the nodes for Senior Project I and II
+        courses.putIfAbsent(SENIOR_PROJECT_1,
+                new Course(SENIOR_PROJECT_1, SENIOR_PROJECT_1, Collections.emptyList()));
+        adjList.putIfAbsent(SENIOR_PROJECT_1, new ArrayList<>());
+        knownCourseIds.add(SENIOR_PROJECT_1);
+
+        courses.putIfAbsent(SENIOR_PROJECT_2,
+                new Course(SENIOR_PROJECT_2, SENIOR_PROJECT_2, Collections.emptyList()));
+        adjList.putIfAbsent(SENIOR_PROJECT_2, new ArrayList<>());
+        knownCourseIds.add(SENIOR_PROJECT_2);
+
+        // Add the node for Writing Seminar
+        courses.putIfAbsent(WRITING_SEMINAR,
+                new Course(WRITING_SEMINAR, WRITING_SEMINAR, Collections.emptyList())); // No prereqs for itself
+        adjList.putIfAbsent(WRITING_SEMINAR, new ArrayList<>());
+        knownCourseIds.add(WRITING_SEMINAR);
 
         // Iteratively discover and add phantom prerequisite courses
         Queue<String> processingQueue = new LinkedList<>(knownCourseIds);
@@ -93,14 +106,18 @@ public class PrereqGraph {
             adjList.get("CIS 1100").add("CIS 1200");
         }
 
-        // All schedulable courses
+        // Link regular courses to Senior Project I and Project I to Project II
         for (String courseId : knownCourseIds) {
-            if (!courseId.equals(SENIOR_DESIGN_PLACEHOLDER)) {
+            if (!courseId.equals(SENIOR_PROJECT_1) && !courseId.equals(SENIOR_PROJECT_2)) {
                 // Ensure the courseId still exists as a key in adjList
                 if (adjList.containsKey(courseId)) {
-                    adjList.get(courseId).add(SENIOR_DESIGN_PLACEHOLDER);
+                    adjList.get(courseId).add(SENIOR_PROJECT_1); // All other courses are prereqs for Project I
                 }
             }
+        }
+        // Add explicit dependency
+        if (adjList.containsKey(SENIOR_PROJECT_1)) { // Ensure node exists
+            adjList.get(SENIOR_PROJECT_1).add(SENIOR_PROJECT_2);
         }
     }
 

@@ -9,6 +9,12 @@ public class Scheduler {
     private final PrereqGraph graph;
     private final Map<String, Course> allCoursesMap; // For accessing Course objects by ID
 
+    private static final String SENIOR_PROJECT_1 = "Senior Project I";
+    private static final String SENIOR_PROJECT_2 = "Senior Project II";
+    private static final String CIS_1100 = "CIS 1100";
+    private static final String CIS_1200 = "CIS 1200";
+    private static final String WRITING_SEMINAR = "Writing Seminar";
+
     public Scheduler(List<Course> coursesFromLoader) {
         this.graph = new PrereqGraph(coursesFromLoader);
         this.allCoursesMap = Collections.unmodifiableMap(this.graph.getCoursesMap());
@@ -34,86 +40,254 @@ public class Scheduler {
         // Use course IDs from the graphs understanding of schedulable courses
         Set<String> coursesToSchedule = new HashSet<>(this.allCoursesMap.keySet());
 
+        // Remove Senior Projects from the pool before any scheduling happens
+        coursesToSchedule.remove(SENIOR_PROJECT_1);
+        coursesToSchedule.remove(SENIOR_PROJECT_2);
+
+        // Prepare for forced placements
+        List<String> semester1Courses = new ArrayList<>();
+        List<String> semester2Courses = new ArrayList<>();
+
+        // Force placement for Semester 1
+        if (coursesToSchedule.contains(WRITING_SEMINAR)) {
+            semester1Courses.add(WRITING_SEMINAR);
+            coursesToSchedule.remove(WRITING_SEMINAR);
+            completedCourses.add(WRITING_SEMINAR);
+        }
+        // CIS 1100
+        if (coursesToSchedule.contains(CIS_1100)) {
+            // Check if its prerequisites are met
+            Course cis1100 = allCoursesMap.get(CIS_1100);
+            if (cis1100 != null && arePrerequisitesMet(cis1100, completedCourses)) { // Pass empty set initially
+                if (semester1Courses.size() < maxCoursesPerSemester) { // Check space
+                    semester1Courses.add(CIS_1100);
+                    coursesToSchedule.remove(CIS_1100);
+                    completedCourses.add(CIS_1100); // Add to completed after adding to semester 1
+                } else {
+                    System.err.println("Warning: Not enough space in Semester 1 to force placement of " + CIS_1100);
+                    // CIS 1100 will be scheduled later by the main loop
+                }
+            } else if (cis1100 != null) {
+                System.err.println("Warning: Cannot force " + CIS_1100
+                        + " into Semester 1, prerequisites not met (should be unusual).");
+            }
+        }
+
+        // Fill rest of Semester 1
+        List<String> eligibleForSem1All = findEligibleCourses(coursesToSchedule, completedCourses); // Find all
+
+        // If CIS 1100 was placed in Sem 1
+        List<String> eligibleForSem1 = new ArrayList<>();
+        boolean cis1100_in_sem1 = semester1Courses.contains(CIS_1100); // Check if CIS 1100 was successfully forced
+        for (String eligibleCourse : eligibleForSem1All) {
+            if (cis1100_in_sem1 && eligibleCourse.equals(CIS_1200)) {
+                // Skip CIS 1200 if CIS 1100 is being forced into Sem 1
+                continue;
+            }
+            eligibleForSem1.add(eligibleCourse);
+        }
+
+        int sem1FillCount = maxCoursesPerSemester - semester1Courses.size();
+        // Now use the filtered eligibleForSem1 list to fill the semester
+        for (int i = 0; i < sem1FillCount && i < eligibleForSem1.size(); i++) {
+            String courseToAdd = eligibleForSem1.get(i);
+            semester1Courses.add(courseToAdd);
+            coursesToSchedule.remove(courseToAdd);
+            completedCourses.add(courseToAdd); // Add nonforced courses to completed AFTER adding to semester
+        }
+        if (!semester1Courses.isEmpty()) {
+            // Ensure completedCourses reflects everything actually put in semester 1 before
+            completedCourses.addAll(semester1Courses); // Make sure all forced filled are completed
+            plan.addSemester(semester1Courses);
+        }
+
+        // Force placement for Semester 2
+        if (coursesToSchedule.contains(CIS_1200) && completedCourses.contains(CIS_1100)) {
+            Course cis1200 = allCoursesMap.get(CIS_1200);
+            // Check if its other prerequisites are met by completedCourses
+            if (cis1200 != null && arePrerequisitesMet(cis1200, completedCourses)) {
+                if (semester2Courses.size() < maxCoursesPerSemester) { // Check space
+                    semester2Courses.add(CIS_1200);
+                    coursesToSchedule.remove(CIS_1200);
+                    // Dont add to completedCourses yet wait until end of semester 2 build
+                } else {
+                    System.err.println("Warning: Not enough space in Semester 2 to force placement of " + CIS_1200);
+                    // CIS 1200 will be scheduled later by the main loop if space is an issue
+                }
+            } else if (cis1200 != null) {
+                System.err.println("Warning: Cannot force " + CIS_1200 + " into Semester 2, prerequisites not met.");
+            }
+        }
+
+        // Fill rest of Semester 2
+        List<String> eligibleForSem2 = findEligibleCourses(coursesToSchedule, completedCourses);
+        int sem2FillCount = maxCoursesPerSemester - semester2Courses.size();
+        List<String> addedToSem2 = new ArrayList<>(); // Track whats actually added
+        for (int i = 0; i < sem2FillCount && i < eligibleForSem2.size(); i++) {
+            String courseToAdd = eligibleForSem2.get(i);
+            semester2Courses.add(courseToAdd);
+            addedToSem2.add(courseToAdd); // Track for removal later
+        }
+        // Update completedCourses and coursesToSchedule after filling semester 2
+        coursesToSchedule.removeAll(addedToSem2);
+        completedCourses.addAll(semester2Courses); // Add everything from sem 2
+        if (!semester2Courses.isEmpty()) {
+            plan.addSemester(semester2Courses);
+        }
+
+        // Main loop for remaining semesters
         try {
-            // Use topological sort to influence processing order of eligibles
             List<String> initialProcessingOrder = graph.topoSort();
-            // // TEMPORARY DEBUG
-            // System.out.println("DEBUG: Initial allCoursesMap keys: " +
-            // allCoursesMap.keySet());
-            // Course meam1100 = allCoursesMap.get("MEAM 1100");
-            // if (meam1100 != null) {
-            // System.out.println("DEBUG: MEAM 1100 Prereqs from DataLoader: " +
-            // meam1100.getPrerequisites());
-            // } else {
-            // System.out.println("DEBUG: MEAM 1100 not found in allCoursesMap!");
-            // }
-            // Course phys0151 = allCoursesMap.get("PHYS 0151");
-            // if (phys0151 != null) {
-            // System.out.println("DEBUG: PHYS 0151 Prereqs from DataLoader: " +
-            // phys0151.getPrerequisites());
-            // } else {
-            // System.out.println("DEBUG: PHYS 0151 not found in allCoursesMap!");
-            // }
-            // // END TEMPORARY DEBUG
+
             while (!coursesToSchedule.isEmpty()) {
                 List<String> currentSemesterCourses = new ArrayList<>();
-                List<String> eligibleNow = new ArrayList<>();
+                List<String> eligibleNow = findEligibleCourses(coursesToSchedule, completedCourses);
 
-                // Determine eligible courses based on logical prerequisites
-                List<String> candidatesToConsider = initialProcessingOrder.stream()
-                        .filter(coursesToSchedule::contains)
-                        .collect(Collectors.toList());
-                // Add any remaining courses not in topoSort
-                coursesToSchedule.stream().filter(c -> !candidatesToConsider.contains(c))
-                        .forEach(candidatesToConsider::add);
-
-                for (String courseId : candidatesToConsider) {
-                    Course course = this.allCoursesMap.get(courseId);
-                    if (course != null && arePrerequisitesMet(course, completedCourses)) {
-                        eligibleNow.add(courseId);
-                    }
-                }
+                eligibleNow.sort(Comparator.comparingInt(courseId -> {
+                    int index = initialProcessingOrder.indexOf(courseId);
+                    return index == -1 ? Integer.MAX_VALUE : index; // Put courses not in topo sort last
+                }));
 
                 if (eligibleNow.isEmpty() && !coursesToSchedule.isEmpty()) {
-                    // This could happen if theres an unresolvable situation not caught by graph
                     System.err.println(
-                            "Error: Cannot find eligible courses to schedule. Remaining: " + coursesToSchedule);
+                            "Error: Cannot find eligible courses to schedule during main loop. Remaining: "
+                                    + coursesToSchedule);
                     System.err.println("This might indicate unsatisfiable prerequisites or a data issue.");
-                    // Add remaining courses to a final problematic semester or handle as error
-                    plan.addSemester(new ArrayList<>(coursesToSchedule)); // Add remaining to indicate issue
-                    coursesToSchedule.clear(); // Exit loop
+                    plan.addSemester(new ArrayList<>(coursesToSchedule));
+                    coursesToSchedule.clear();
                     break;
                 }
 
                 int coursesAddedThisSemester = 0;
+                List<String> addedThisSem = new ArrayList<>();
                 for (String courseToTake : eligibleNow) {
                     if (coursesAddedThisSemester < maxCoursesPerSemester) {
                         currentSemesterCourses.add(courseToTake);
+                        addedThisSem.add(courseToTake);
                         coursesAddedThisSemester++;
                     } else {
-                        break; // Semester full
+                        break;
                     }
                 }
 
                 if (!currentSemesterCourses.isEmpty()) {
                     plan.addSemester(currentSemesterCourses);
                     completedCourses.addAll(currentSemesterCourses);
-                    coursesToSchedule.removeAll(currentSemesterCourses);
+                    coursesToSchedule.removeAll(addedThisSem);
                 } else if (!coursesToSchedule.isEmpty()) {
-                    // If eligibleNow was not empty
                     System.err.println(
-                            "Warning: No courses added to semester despite eligibles. Remaining: " + coursesToSchedule);
-                    // To prevent infinite loop break or throw For now
+                            "Warning: No courses added to semester despite eligibles during main loop. Remaining: "
+                                    + coursesToSchedule);
                     plan.addSemester(new ArrayList<>(coursesToSchedule));
                     coursesToSchedule.clear();
                     break;
                 }
             }
-        } catch (IllegalStateException e) { // Catch cycle from topoSort
+        } catch (IllegalStateException e) {
             System.err.println("Scheduling error (cycle detected by topoSort): " + e.getMessage());
-            // Plan will be partial or empty
         }
+
+        // Force placement of Senior Projects
+        List<List<String>> semesters = plan.getSemesters();
+
+        int sp1_final_index = -1; // Track where SP1 actually lands
+
+        // Place Senior Project I
+        if (allCoursesMap.containsKey(SENIOR_PROJECT_1) && !completedCourses.contains(SENIOR_PROJECT_1)) {
+            boolean sp1_placed = false;
+            int currentNumSemesters = semesters.size(); // Get current count
+
+            // Ensure we have semesters to work with add if plan is empty
+            if (currentNumSemesters == 0) {
+                semesters.add(new ArrayList<>());
+                currentNumSemesters++;
+            }
+
+            // Try secondtolast semester first
+            if (currentNumSemesters >= 2) {
+                int targetIndex = currentNumSemesters - 2;
+                List<String> targetSem = semesters.get(targetIndex);
+                if (targetSem.size() < maxCoursesPerSemester) {
+                    targetSem.add(SENIOR_PROJECT_1);
+                    completedCourses.add(SENIOR_PROJECT_1);
+                    sp1_final_index = targetIndex;
+                    sp1_placed = true;
+                }
+            }
+            // If not placed yet try the last semester
+            if (!sp1_placed) {
+                int targetIndex = currentNumSemesters - 1; // Use current count
+                List<String> targetSem = semesters.get(targetIndex);
+                if (targetSem.size() < maxCoursesPerSemester) {
+                    targetSem.add(SENIOR_PROJECT_1);
+                    completedCourses.add(SENIOR_PROJECT_1);
+                    sp1_final_index = targetIndex;
+                    sp1_placed = true;
+                }
+            }
+            if (!sp1_placed) {
+                List<String> newSem = new ArrayList<>(List.of(SENIOR_PROJECT_1));
+                plan.addSemester(newSem); // Appends to the end
+                semesters = plan.getSemesters(); // Update local reference
+                completedCourses.add(SENIOR_PROJECT_1);
+                sp1_final_index = semesters.size() - 1; // Its in the new last semester
+                sp1_placed = true;
+            }
+        } else if (completedCourses.contains(SENIOR_PROJECT_1)) {
+            // If SP1 was already marked completed
+            for (int i = 0; i < semesters.size(); i++) {
+                if (semesters.get(i).contains(SENIOR_PROJECT_1)) {
+                    sp1_final_index = i;
+                    break;
+                }
+            }
+            if (sp1_final_index == -1 && allCoursesMap.containsKey(SENIOR_PROJECT_1)) {
+                System.err.println(
+                        "Warning: SP1 marked completed but not found in plan! Cannot determine placement for SP2.");
+            }
+        }
+
+        // Place Senior Project II
+        if (allCoursesMap.containsKey(SENIOR_PROJECT_2) && !completedCourses.contains(SENIOR_PROJECT_2)) {
+            if (!completedCourses.contains(SENIOR_PROJECT_1) || sp1_final_index == -1) {
+                System.err.println("Error: Cannot place " + SENIOR_PROJECT_2 + " because prerequisite "
+                        + SENIOR_PROJECT_1 + " was not placed successfully.");
+            } else {
+                boolean sp2_placed = false;
+                int currentNumSemesters = semesters.size(); // Reget count after potential SP1 placement
+                int targetIndexForSP2 = sp1_final_index + 1; // Target semester AFTER SP1
+
+                if (targetIndexForSP2 < currentNumSemesters) {
+                    List<String> targetSem = semesters.get(targetIndexForSP2);
+                    if (targetSem.size() < maxCoursesPerSemester) {
+                        targetSem.add(SENIOR_PROJECT_2);
+                        completedCourses.add(SENIOR_PROJECT_2);
+                        sp2_placed = true;
+                    }
+                }
+
+                // If not placed
+                if (!sp2_placed) {
+                    List<String> newSem = new ArrayList<>(List.of(SENIOR_PROJECT_2));
+                    plan.addSemester(newSem); // Appends
+                    completedCourses.add(SENIOR_PROJECT_2);
+                    sp2_placed = true;
+                }
+            }
+        }
+
         return plan;
+    } // End of generateDegreePlan method
+
+    private List<String> findEligibleCourses(Set<String> coursesToConsider, Set<String> completedCourses) {
+        List<String> eligible = new ArrayList<>();
+        for (String courseId : coursesToConsider) {
+            Course course = this.allCoursesMap.get(courseId);
+            if (course != null && arePrerequisitesMet(course, completedCourses)) {
+                eligible.add(courseId);
+            }
+        }
+        return eligible;
     }
 
     // Helper method to check if logical prerequisites for a course are met
