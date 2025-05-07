@@ -1,81 +1,136 @@
 package scheduler;
 
-import java.util.*;
 import model.Course;
+import java.util.*;
 
 public class PrereqGraph {
-    private Map<String, Course> courses;
-    private Map<String, List<String>> adjList;
+    // Map of courseId to Course object for all valid schedulable courses
+    private final Map<String, Course> courses;
+    // Adjacency list key is courseId
+    private final Map<String, List<String>> adjList;
+
+    private static final String SENIOR_DESIGN_PLACEHOLDER = "Senior Design Project Courses";
 
     public PrereqGraph(List<Course> courseList) {
         courses = new HashMap<>();
         adjList = new HashMap<>();
 
+        // Initialize all potential nodes from courseList first
+        List<Course> schedulableCourses = new ArrayList<>();
         for (Course course : courseList) {
-            String courseId = course.getCourseId();
-            courses.put(courseId, course);
-            adjList.putIfAbsent(courseId, new ArrayList<>()); // Ensure course is in adjList
+            if (course.getName().contains("Senior")) {
+                // Skip Senior named courses if they are to be replaced by the placeholder
+                continue;
+            }
+            schedulableCourses.add(course);
+            adjList.put(course.getCourseId(), new ArrayList<>()); // Ensure node exists
+            courses.put(course.getCourseId(), course);
+        }
 
+        // Add the placeholder for Senior Design as a node
+        adjList.putIfAbsent(SENIOR_DESIGN_PLACEHOLDER, new ArrayList<>());
+        courses.putIfAbsent(SENIOR_DESIGN_PLACEHOLDER,
+                new Course(SENIOR_DESIGN_PLACEHOLDER, "Senior Design Placeholder", Collections.emptyList()));
+
+        for (Course course : schedulableCourses) {
+            String courseId = course.getCourseId();
+
+            // Build graph from prerequisites
             for (List<String> prereqGroup : course.getPrerequisites()) {
-                for (String prereqCourse : prereqGroup) {
-                    adjList.putIfAbsent(prereqCourse, new ArrayList<>());
-                    adjList.get(prereqCourse).add(courseId); // prereq → course
+                for (String prereqCourseId : prereqGroup) {
+                    // Ensure prereqCourseId node exists in adjList if its a valid course
+                    adjList.putIfAbsent(prereqCourseId, new ArrayList<>());
+                    adjList.get(prereqCourseId).add(courseId);
                 }
             }
 
-            // EXTRA CODE FOR DETAILS THAT CAN"T BE CAPTURED DURING WEBSCRAPING DUE TO EXTERNAL BLOCKERS
-            // CIS 1100 is recommended to take before CIS 1200 but isn't a strict prereq
+            // EXTRA CODE FOR DETAILS THAT CAN"T BE CAPTURED DURING WEBSCRAPING DUE TO
+            // EXTERNAL BLOCKERS
+            // Special rule CIS 1100 is a soft prereq for CIS 1200 enforce it
             if (courseId.equals("CIS 1100")) {
                 adjList.get(courseId).add("CIS 1200");
+                // Ensure CIS 1200 is in adjList if not already processed
+                adjList.putIfAbsent("CIS 1200", new ArrayList<>());
             }
 
-            // Add "Senior Design Project Courses" as a prerequisite for all courses so it ends up at the end
-            adjList.get(courseId).add("Senior Design Project Courses");
-
-            if (course.getName().contains("Senior")) {
-                adjList.remove(courseId);
-                courses.remove(courseId);
-            }
+            // All nonsenior schedulable courses lead to the Senior Design placeholder
+            adjList.get(courseId).add(SENIOR_DESIGN_PLACEHOLDER);
         }
     }
 
-    public List<String> topoSort() throws Exception {
-        List<String> sorted = new ArrayList<>();
-        Set<String> visited = new HashSet<>();
-        Set<String> recStack = new HashSet<>();
+    /**
+     * Performs a topological sort of the courses.
+     * 
+     * @return A list of course IDs in a topologically sorted order.
+     * @throws IllegalStateException if a cycle is detected in the graph.
+     */
+    public List<String> topoSort() throws IllegalStateException {
+        List<String> sortedOrder = new ArrayList<>();
+        Set<String> visited = new HashSet<>(); // Tracks nodes visited in the current DFS path
+        Set<String> fullyProcessed = new HashSet<>(); // Tracks nodes for which DFS is complete
 
-        for (String courseId : courses.keySet()) {
-            if (!visited.contains(courseId)) {
-                dfs(courseId, visited, recStack, sorted);
+        for (String courseId : courses.keySet()) { // Iterate using schedulable courses
+            if (!fullyProcessed.contains(courseId)) {
+                dfs(courseId, visited, fullyProcessed, sortedOrder);
+            }
+        }
+        return sortedOrder;
+    }
+
+    private void dfs(String courseId, Set<String> visited, Set<String> fullyProcessed, List<String> sortedOrder)
+            throws IllegalStateException {
+        if (!adjList.containsKey(courseId) && !courses.containsKey(courseId)) {
+            // This courseId might be a prerequisite listed in a courses data
+            visited.remove(courseId); // Ensure its not stuck in visited if it was added then removed
+            fullyProcessed.add(courseId);
+            return;
+        }
+
+        visited.add(courseId);
+
+        for (String neighbor : adjList.getOrDefault(courseId, Collections.emptyList())) {
+            if (!fullyProcessed.contains(neighbor)) { // Only proceed if neighbor hasnt been fully processed
+                if (visited.contains(neighbor)) {
+                    throw new IllegalStateException("Cycle detected involving course: " + neighbor);
+                }
+                dfs(neighbor, visited, fullyProcessed, sortedOrder);
             }
         }
 
-        return sorted; // Already in correct topological order
+        visited.remove(courseId);
+        fullyProcessed.add(courseId);
+        sortedOrder.add(0, courseId); // Prepend to get correct topological order
     }
 
-    private void dfs(String node, Set<String> visited, Set<String> recStack, List<String> sorted) throws Exception {
-        if (recStack.contains(node)) {
-            throw new Exception("Cycle detected involving course: " + node);
-        }
-        if (visited.contains(node)) return;
-
-        recStack.add(node);
-        for (String neighbor : adjList.getOrDefault(node, new ArrayList<>())) {
-            dfs(neighbor, visited, recStack, sorted);
-        }
-        recStack.remove(node);
-        visited.add(node);
-        sorted.add(0, node); // prepend to maintain topo order
-    }
-
+    /**
+     * Gets the list of direct prerequisite course IDs for a given course ID,
+     * based on the constructed graph.
+     * 
+     * @param courseId The ID of the course.
+     * @return A list of prerequisite course IDs.
+     */
     public List<String> getPrereqs(String courseId) {
         List<String> prereqs = new ArrayList<>();
+        if (courseId == null)
+            return prereqs;
+
         for (Map.Entry<String, List<String>> entry : adjList.entrySet()) {
-            if (entry.getValue().contains(courseId)) {
-                prereqs.add(entry.getKey());
+            String potentialPrereq = entry.getKey();
+            List<String> successors = entry.getValue();
+            if (successors.contains(courseId)) {
+                prereqs.add(potentialPrereq);
             }
         }
         return prereqs;
     }
 
+    // Getter for the courses map might be useful for the Scheduler
+    public Map<String, Course> getCoursesMap() {
+        return Collections.unmodifiableMap(courses);
+    }
+
+    // Getter for the adjacency list
+    public Map<String, List<String>> getAdjList() {
+        return Collections.unmodifiableMap(adjList);
+    }
 }

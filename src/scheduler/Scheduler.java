@@ -1,81 +1,130 @@
 package scheduler;
 
-import java.util.*;
 import model.Course;
 import model.DegreePlan;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Scheduler {
-    private PrereqGraph graph;
+    private final PrereqGraph graph;
+    private final Map<String, Course> allCoursesMap; // For accessing Course objects by ID
 
-    public Scheduler(List<Course> courses) {
-        graph = new PrereqGraph(courses);
+    public Scheduler(List<Course> coursesFromLoader) {
+        this.graph = new PrereqGraph(coursesFromLoader);
+        this.allCoursesMap = Collections.unmodifiableMap(this.graph.getCoursesMap());
     }
 
-    public List<String> generateSchedule() {
+    // Returns a single valid linear sequence of courses
+    public List<String> generateLinearSchedule() {
         try {
             return graph.topoSort();
-        } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());
+        } catch (IllegalStateException e) {
+            System.err.println("Scheduling error (cycle detected): " + e.getMessage());
             return new ArrayList<>();
         }
     }
 
+    // Generates a semesterbysemester plan respecting prerequisites and load
     public DegreePlan generateDegreePlan(int maxCoursesPerSemester) {
+        if (maxCoursesPerSemester <= 0) {
+            throw new IllegalArgumentException("Max courses per semester must be positive.");
+        }
         DegreePlan plan = new DegreePlan();
+        Set<String> completedCourses = new HashSet<>();
+        // Use course IDs from the graphs understanding of schedulable courses
+        Set<String> coursesToSchedule = new HashSet<>(this.allCoursesMap.keySet());
 
         try {
-            List<String> sorted = graph.topoSort();
-            Map<String, Integer> indegree = new HashMap<>();
-            Map<String, List<String>> prereqMap = new HashMap<>();
+            // Use topological sort to influence processing order of eligibles
+            List<String> initialProcessingOrder = graph.topoSort();
 
-            for (String course : sorted) {
-                indegree.put(course, 0);
-                prereqMap.put(course, new ArrayList<>());
-            }
+            while (!coursesToSchedule.isEmpty()) {
+                List<String> currentSemesterCourses = new ArrayList<>();
+                List<String> eligibleNow = new ArrayList<>();
 
-            for (String course : sorted) {
-                for (String prereq : graph.getPrereqs(course)) {
-                    prereqMap.get(course).add(prereq);
-                    indegree.put(course, indegree.get(course) + 1);
-                }
-            }
+                // Determine eligible courses based on logical prerequisites
+                List<String> candidatesToConsider = initialProcessingOrder.stream()
+                        .filter(coursesToSchedule::contains)
+                        .collect(Collectors.toList());
+                // Add any remaining courses not in topoSort
+                coursesToSchedule.stream().filter(c -> !candidatesToConsider.contains(c))
+                        .forEach(candidatesToConsider::add);
 
-            Set<String> completed = new HashSet<>();
-            Queue<String> available = new LinkedList<>();
-
-            for (String course : sorted) {
-                if (indegree.get(course) == 0) {
-                    available.add(course);
-                }
-            }
-
-            while (!available.isEmpty()) {
-                List<String> semesterCourses = new ArrayList<>();
-                int count = 0;
-                int size = available.size();
-
-                while (count < maxCoursesPerSemester && size-- > 0) {
-                    String course = available.poll();
-                    semesterCourses.add(course);
-                    completed.add(course);
-                    count++;
-
-                    for (String next : sorted) {
-                        if (!completed.contains(next) && prereqMap.get(next).contains(course)) {
-                            indegree.put(next, indegree.get(next) - 1);
-                            if (indegree.get(next) == 0) {
-                                available.add(next);
-                            }
-                        }
+                for (String courseId : candidatesToConsider) {
+                    Course course = this.allCoursesMap.get(courseId);
+                    if (course != null && arePrerequisitesMet(course, completedCourses)) {
+                        eligibleNow.add(courseId);
                     }
                 }
 
-                plan.addSemester(semesterCourses);
+                if (eligibleNow.isEmpty() && !coursesToSchedule.isEmpty()) {
+                    // This could happen if theres an unresolvable situation not caught by graph
+                    System.err.println(
+                            "Error: Cannot find eligible courses to schedule. Remaining: " + coursesToSchedule);
+                    System.err.println("This might indicate unsatisfiable prerequisites or a data issue.");
+                    // Add remaining courses to a final problematic semester or handle as error
+                    plan.addSemester(new ArrayList<>(coursesToSchedule)); // Add remaining to indicate issue
+                    coursesToSchedule.clear(); // Exit loop
+                    break;
+                }
+
+                int coursesAddedThisSemester = 0;
+                for (String courseToTake : eligibleNow) {
+                    if (coursesAddedThisSemester < maxCoursesPerSemester) {
+                        currentSemesterCourses.add(courseToTake);
+                        coursesAddedThisSemester++;
+                    } else {
+                        break; // Semester full
+                    }
+                }
+
+                if (!currentSemesterCourses.isEmpty()) {
+                    plan.addSemester(currentSemesterCourses);
+                    completedCourses.addAll(currentSemesterCourses);
+                    coursesToSchedule.removeAll(currentSemesterCourses);
+                } else if (!coursesToSchedule.isEmpty()) {
+                    // If eligibleNow was not empty
+                    System.err.println(
+                            "Warning: No courses added to semester despite eligibles. Remaining: " + coursesToSchedule);
+                    // To prevent infinite loop break or throw For now
+                    plan.addSemester(new ArrayList<>(coursesToSchedule));
+                    coursesToSchedule.clear();
+                    break;
+                }
             }
-        } catch (Exception e) {
-            System.err.println("Scheduling error: " + e.getMessage());
+        } catch (IllegalStateException e) { // Catch cycle from topoSort
+            System.err.println("Scheduling error (cycle detected by topoSort): " + e.getMessage());
+            // Plan will be partial or empty
+        }
+        return plan;
+    }
+
+    // Helper method to check if logical prerequisites for a course are met
+    private boolean arePrerequisitesMet(Course course, Set<String> completedCourses) {
+        if (course == null)
+            return false; // Should not happen if courseId came from allCoursesMap
+
+        List<List<String>> prereqGroups = course.getPrerequisites();
+        if (prereqGroups.isEmpty()) {
+            return true; // No prerequisites
         }
 
-        return plan;
+        for (List<String> orGroup : prereqGroups) { // Each inner list is an OR group
+            if (orGroup.isEmpty()) { // An empty OR group within AND groups means this path is unsatisfiable
+                // This case should ideally be prevented by data validation
+                continue; // Or treat as true if it means optional category satisfied
+            }
+            boolean orGroupSatisfied = false;
+            for (String prereqCourseId : orGroup) {
+                if (completedCourses.contains(prereqCourseId)) {
+                    orGroupSatisfied = true;
+                    break; // This OR group is satisfied
+                }
+            }
+            if (!orGroupSatisfied) {
+                return false; // This ANDconnected prerequisite group is not satisfied
+            }
+        }
+        return true; // All ANDconnected prerequisite groups are satisfied
     }
 }

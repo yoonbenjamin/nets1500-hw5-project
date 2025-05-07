@@ -15,7 +15,7 @@ public class CourseDataLoader {
 
     public static List<Course> findCoursesAndPrereqsInMajor(String departmentCode) throws IOException {
         String url = BASE_URL + "/undergraduate/programs/";
-        
+
         switch (departmentCode.toLowerCase()) {
             case "arin":
                 url += "artificial-intelligence-bse//";
@@ -78,7 +78,7 @@ public class CourseDataLoader {
 
                                 String courseId = courseLink.text();
                                 Element courseNameElement = courseLink.parent().nextElementSibling();
-                                String courseName = courseNameElement != null ? courseNameElement.text() : "";                                
+                                String courseName = courseNameElement != null ? courseNameElement.text() : "";
                                 Course courseToAddOdd = new Course(courseId, courseName, prerequisites);
                                 courseList.add(courseToAddOdd);
                             }
@@ -140,9 +140,11 @@ public class CourseDataLoader {
                     return prerequisites;
                 }
 
-                // Check if the description contains "Prerequisite" with one course (four letter class code)
+                // Check if the description contains "Prerequisite" with one course (four letter
+                // class code)
                 // Example: "Prerequisite: PHYS 1200"
-                Pattern descPrereqOneCourseFourPattern = Pattern.compile("Prerequisite: [A-Za-z][A-Za-z][A-Za-z][A-Za-z]\\s\\d\\d\\d\\d");
+                Pattern descPrereqOneCourseFourPattern = Pattern
+                        .compile("Prerequisite: [A-Za-z][A-Za-z][A-Za-z][A-Za-z]\\s\\d\\d\\d\\d");
                 Matcher descPrereqOneCourseFourMatcher = descPrereqOneCourseFourPattern.matcher(descText);
                 if (descPrereqOneCourseFourMatcher.find()) {
                     // Try to extract prerequisites from description
@@ -151,9 +153,11 @@ public class CourseDataLoader {
                     return prerequisites;
                 }
 
-                // Check if the description contains "Prerequisite" with one course (three letter class code)
+                // Check if the description contains "Prerequisite" with one course (three
+                // letter class code)
                 // Example: "Prerequisite: CIS 1200"
-                Pattern descPrereqOneCourseThreePattern = Pattern.compile("Prerequisite: [A-Za-z][A-Za-z][A-Za-z]\\s\\d\\d\\d\\d");
+                Pattern descPrereqOneCourseThreePattern = Pattern
+                        .compile("Prerequisite: [A-Za-z][A-Za-z][A-Za-z]\\s\\d\\d\\d\\d");
                 Matcher descPrereqOneCourseThreeMatcher = descPrereqOneCourseThreePattern.matcher(descText);
                 if (descPrereqOneCourseThreeMatcher.find()) {
                     // Try to extract prerequisites from description
@@ -167,7 +171,8 @@ public class CourseDataLoader {
         return prerequisites;
     }
 
-    // Finds the prerequisites for all courses in a given department (UNUSED - might not need this)
+    // Finds the prerequisites for all courses in a given department (UNUSED - might
+    // not need this)
     public static List<Course> loadCoursesForDepartment(String departmentCode) throws IOException {
         String url = BASE_URL + "/courses/" + departmentCode.toLowerCase() + "/";
         Document doc = Jsoup.connect(url).get();
