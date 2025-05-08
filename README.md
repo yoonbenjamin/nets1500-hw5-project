@@ -13,7 +13,7 @@
 
 ## Project Description
 
-Smart Degree Planner is a Java application designed to assist Penn Engineering (BSE) students in planning their academic paths. The tool automatically generates a potential semester-by-semester course schedule based on the user's chosen major. It achieves this by scraping course and prerequisite data directly from the official Penn course catalog website. This data is used to build a dependency graph, and scheduling algorithms are applied to create a valid sequence that respects prerequisite constraints and basic placement rules, aiming for a balanced course load per semester as specified by the user.
+Smart Degree Planner is a Java application designed to assist Penn Engineering (BSE) students in planning their academic paths. The tool automatically generates a potential semester-by-semester course schedule (only major requirements, not major electives) based on the user's chosen major. It achieves this by scraping course and prerequisite data directly from the official Penn course catalog website. This data is used to build a dependency graph, and scheduling algorithms are applied to create a valid sequence that respects prerequisite constraints and basic placement rules, aiming for a balanced course load per semester as specified by the user.
 
 ---
 
