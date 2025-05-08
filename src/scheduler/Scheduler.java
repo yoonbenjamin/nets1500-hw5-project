@@ -3,7 +3,6 @@ package scheduler;
 import model.Course;
 import model.DegreePlan;
 import java.util.*;
-// import java.util.stream.Collectors;
 
 public class Scheduler {
     private final PrereqGraph graph;
@@ -30,7 +29,7 @@ public class Scheduler {
         }
     }
 
-    // Generates a semesterbysemester plan respecting prerequisites and load
+    // Generates a semesterbysemester plan
     public DegreePlan generateDegreePlan(int maxCoursesPerSemester) {
         if (maxCoursesPerSemester <= 0) {
             throw new IllegalArgumentException("Max courses per semester must be positive.");
@@ -48,7 +47,7 @@ public class Scheduler {
         List<String> semester1Courses = new ArrayList<>();
         List<String> semester2Courses = new ArrayList<>();
 
-        // Force placement for Semester 1
+        // Special placement for Semester 1
         if (coursesToSchedule.contains(WRITING_SEMINAR)) {
             semester1Courses.add(WRITING_SEMINAR);
             coursesToSchedule.remove(WRITING_SEMINAR);
@@ -65,7 +64,6 @@ public class Scheduler {
                     completedCourses.add(CIS_1100); // Add to completed after adding to semester 1
                 } else {
                     System.err.println("Warning: Not enough space in Semester 1 to force placement of " + CIS_1100);
-                    // CIS 1100 will be scheduled later by the main loop
                 }
             } else if (cis1100 != null) {
                 System.err.println("Warning: Cannot force " + CIS_1100
@@ -78,10 +76,9 @@ public class Scheduler {
 
         // If CIS 1100 was placed in Sem 1
         List<String> eligibleForSem1 = new ArrayList<>();
-        boolean cis1100_in_sem1 = semester1Courses.contains(CIS_1100); // Check if CIS 1100 was successfully forced
+        boolean cis1100_in_sem1 = semester1Courses.contains(CIS_1100);
         for (String eligibleCourse : eligibleForSem1All) {
             if (cis1100_in_sem1 && eligibleCourse.equals(CIS_1200)) {
-                // Skip CIS 1200 if CIS 1100 is being forced into Sem 1
                 continue;
             }
             eligibleForSem1.add(eligibleCourse);
@@ -99,7 +96,7 @@ public class Scheduler {
             plan.addSemester(semester1Courses);
         }
 
-        // Force placement for Semester 2
+        // Special placement for Semester 2
         if (coursesToSchedule.contains(CIS_1200) && completedCourses.contains(CIS_1100)) {
             Course cis1200 = allCoursesMap.get(CIS_1200);
             // Check if its other prerequisites are met by completedCourses
@@ -183,7 +180,7 @@ public class Scheduler {
             System.err.println("Scheduling error (cycle detected by topoSort): " + e.getMessage());
         }
 
-        // Force placement of Senior Projects
+        // Special placement of Senior Projects
         List<List<String>> semesters = plan.getSemesters();
 
         int sp1_final_index = -1;
@@ -193,7 +190,6 @@ public class Scheduler {
             boolean sp1_placed = false;
             int currentNumSemesters = semesters.size();
 
-            // Ensure we have semesters to work with add if plan is empty
             if (currentNumSemesters == 0) {
                 semesters.add(new ArrayList<>());
                 currentNumSemesters++;
@@ -226,7 +222,7 @@ public class Scheduler {
                 plan.addSemester(newSem); // Appends to the end
                 semesters = plan.getSemesters(); // Update local reference
                 completedCourses.add(SENIOR_PROJECT_1);
-                sp1_final_index = semesters.size() - 1; // Its in the new last semester
+                sp1_final_index = semesters.size() - 1;
                 sp1_placed = true;
             }
         } else if (completedCourses.contains(SENIOR_PROJECT_1)) {
@@ -265,7 +261,7 @@ public class Scheduler {
                 // If not placed
                 if (!sp2_placed) {
                     List<String> newSem = new ArrayList<>(List.of(SENIOR_PROJECT_2));
-                    plan.addSemester(newSem); // Appends
+                    plan.addSemester(newSem);
                     completedCourses.add(SENIOR_PROJECT_2);
                     sp2_placed = true;
                 }
@@ -273,7 +269,7 @@ public class Scheduler {
         }
 
         return plan;
-    } // End of generateDegreePlan method
+    }
 
     private List<String> findEligibleCourses(Set<String> coursesToConsider, Set<String> completedCourses) {
         List<String> eligible = new ArrayList<>();

@@ -38,7 +38,7 @@ public class Course {
 
     @Override
     public String toString() {
-        // Omitting full prerequisite details for brevity in default toString
+        // Omitting full prerequisite details for brevity
         return courseId + ": " + name + (prerequisites.isEmpty() ? "" : " | Has Prerequisites");
     }
 
