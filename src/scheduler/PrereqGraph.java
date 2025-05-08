@@ -42,14 +42,6 @@ public class PrereqGraph {
         adjList.putIfAbsent(WRITING_SEMINAR, new ArrayList<>());
         knownCourseIds.add(WRITING_SEMINAR);
 
-        // // Iteratively discover and add phantom prerequisite courses
-        // Queue<String> processingQueue = new LinkedList<>(knownCourseIds);
-
-        // // Create a temporary list of courses whose prerequisites need checking for
-        // List<Course> coursesToCheckForPhantomPrereqs = new
-        // ArrayList<>(courseListFromLoader);
-        // int currentCourseIndex = 0;
-
         Set<String> processedForPhantomDiscovery = new HashSet<>(); // Avoid reprocessing a course for phantom discovery
 
         boolean newPhantomAddedInPass;
@@ -65,10 +57,6 @@ public class PrereqGraph {
                 for (List<String> prereqGroup : currentCourse.getPrerequisites()) {
                     for (String prereqCourseId : prereqGroup) {
                         if (!knownCourseIds.contains(prereqCourseId)) {
-                            // This is a missing prerequisite create a phantom for it
-                            // System.out.println("INFO: Auto-adding missing prerequisite: " +
-                            // prereqCourseId +
-                            // " (needed by " + currentCourse.getCourseId() + ")");
                             Course phantomPrereq = new Course(prereqCourseId,
                                     prereqCourseId + " (auto-added)",
                                     Collections.emptyList());

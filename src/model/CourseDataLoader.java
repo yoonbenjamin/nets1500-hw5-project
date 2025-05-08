@@ -128,9 +128,6 @@ public class CourseDataLoader {
 
                                     // Filter out Senior Design courses by name before adding
                                     if (courseName.toLowerCase().contains("senior")) {
-                                        // System.out.println("Skipping Senior Design related course: " + courseId + " -
-                                        // "
-                                        // + courseName);
                                         continue;
                                     }
 
@@ -322,17 +319,6 @@ public class CourseDataLoader {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Enter BSE major (ex. CSCI, BE, etc.):");
-
-        // String inputtedCourse = scanner.nextLine();
-
-        // try {
-        // // List<Course> courses = findCoursesAndPrereqsInMajor(inputtedCourse);
-        // // for (Course course : courses) {
-        // // System.out.println(course);
-        // // }
-        // } catch (IOException e) {
-        // System.err.println("Failed to load course data: " + e.getMessage());
-        // }
 
         scanner.close();
     }
